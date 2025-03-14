@@ -254,12 +254,12 @@ void waitForButton (uint32_t *gpio, int button);
 
 /* initialise the secret sequence; by default it should be a random sequence */
 void initSeq() {
-  /* ***  COMPLETE the code here  ***  */
+  /* ***  COMPLETE the code here abdullah ***  */
 }
 
 /* display the sequence on the terminal window, using the format from the sample run in the spec */
 void showSeq(int *seq) {
-  /* ***  COMPLETE the code here  ***  */
+  /* ***  COMPLETE the code here abdullah ***  */
 }
 
 #define NAN1 8
@@ -269,24 +269,24 @@ void showSeq(int *seq) {
 /* returns exact and approximate matches, either both encoded in one value, */
 /* or as a pointer to a pair of values */
 int /* or int* */ countMatches(int *seq1, int *seq2) {
-  /* ***  COMPLETE the code here  ***  */
+  /* ***  COMPLETE the code here amr ***  */
 }
 
 /* show the results from calling countMatches on seq1 and seq1 */
 void showMatches(int /* or int* */ code, /* only for debugging */ int *seq1, int *seq2, /* optional, to control layout */ int lcd_format) {
-  /* ***  COMPLETE the code here  ***  */
+  /* ***  COMPLETE the code here abdullah ***  */
 }
 
 /* parse an integer value as a list of digits, and put them into @seq@ */
 /* needed for processing command-line with options -s or -u            */
 void readSeq(int *seq, int val) {
-  /* ***  COMPLETE the code here  ***  */
+  /* ***  COMPLETE the code here amr ***  */
 }
 
 /* read a guess sequence fron stdin and store the values in arr */
 /* only needed for testing the game logic, without button input */
 int readNum(int max) {
-  /* ***  COMPLETE the code here  ***  */
+  /* ***  COMPLETE the code here amr ***  */
 }
 
 /* ======================================================= */
