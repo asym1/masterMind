@@ -268,8 +268,26 @@ void showSeq(int *seq) {
 /* counts how many entries in seq2 match entries in seq1 */
 /* returns exact and approximate matches, either both encoded in one value, */
 /* or as a pointer to a pair of values */
-int /* or int* */ countMatches(int *seq1, int *seq2) {
-  /* ***  COMPLETE the code here amr ***  */
+int* countMatches(int *seq1, int *seq2) {
+  int approx = 0;
+  int exact = 0;
+  for(int i =0 ; i< 3; i++) {
+      if(seq1[i] == seq2[i]) {
+          exact++;
+      }
+      else {
+          for(int j = 0; j < 3; j++) {
+              if(seq1[i] == seq2[j] || seq2[i] == seq1[j]) {
+                  approx++;
+              }
+          }
+      }
+  }
+
+  int* pair = malloc(2*sizeof(int));
+  pair[0] = exact;
+  pair[1] = approx;
+  return pair;
 }
 
 /* show the results from calling countMatches on seq1 and seq1 */
@@ -279,14 +297,21 @@ void showMatches(int /* or int* */ code, /* only for debugging */ int *seq1, int
 
 /* parse an integer value as a list of digits, and put them into @seq@ */
 /* needed for processing command-line with options -s or -u            */
+// from amr: turns 123 -> [1,2,3] using C++ trick 
 void readSeq(int *seq, int val) {
-  /* ***  COMPLETE the code here amr ***  */
+  int i = 2;
+  while(val) {
+    seq[i] = val % 10;
+    val/=10;
+    i--;
+  }
 }
 
 /* read a guess sequence fron stdin and store the values in arr */
 /* only needed for testing the game logic, without button input */
 int readNum(int max) {
-  /* ***  COMPLETE the code here amr ***  */
+  //no need to use, just call scanf in main in seperate script & then take the int value
+  //recieved and use readSeq on it
 }
 
 /* ======================================================= */
