@@ -254,11 +254,17 @@ void waitForButton (uint32_t *gpio, int button);
 
 /* initialise the secret sequence; by default it should be a random sequence */
 void initSeq() {
-  /* ***  COMPLETE the code here abdullah ***  */
+  seq1 = malloc(sizeof(int) * 3);
+  seq1[0] = (rand() % 3) + 1;
+  seq1[1] = (rand() % 3) + 1;
+  seq1[2] = (rand() % 3) + 1;
 }
 
 /* display the sequence on the terminal window, using the format from the sample run in the spec */
 void showSeq(int *seq) {
+  for (int i = 0; i < seqlen; i++) {
+    printf("seq[%d] = %d\n", i, seq[i]);
+  }
   /* ***  COMPLETE the code here abdullah ***  */
 }
 
@@ -288,11 +294,13 @@ int* countMatches(int *seq1, int *seq2) {
   pair[0] = exact;
   pair[1] = approx;
   return pair;
+  // remember to free the pair in main.
 }
 
 /* show the results from calling countMatches on seq1 and seq1 */
-void showMatches(int /* or int* */ code, /* only for debugging */ int *seq1, int *seq2, /* optional, to control layout */ int lcd_format) {
-  /* ***  COMPLETE the code here abdullah ***  */
+void showMatches(int*  code, /* only for debugging */ int *seq1, int *seq2, /* optional, to control layout */ int lcd_format) {
+  printf("exact matches: %d\n", code[0]);
+  printf("approx: %d\n", code[1]);
 }
 
 /* parse an integer value as a list of digits, and put them into @seq@ */
