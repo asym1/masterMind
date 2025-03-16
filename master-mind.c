@@ -265,7 +265,6 @@ void showSeq(int *seq) {
   for (int i = 0; i < seqlen; i++) {
     printf("seq[%d] = %d\n", i, seq[i]);
   }
-  /* ***  COMPLETE the code here abdullah ***  */
 }
 
 #define NAN1 8
@@ -315,15 +314,8 @@ void readSeq(int *seq, int val) {
   }
 }
 
-/* read a guess sequence fron stdin and store the values in arr */
-/* only needed for testing the game logic, without button input */
-int readNum(int max) {
-  //no need to use, just call scanf in main in seperate script & then take the int value
-  //recieved and use readSeq on it
-}
-
 /* ======================================================= */
-/* SECTION: TIMER code                                     */
+/* SECTION: TIMER code AMR                                 */
 /* ------------------------------------------------------- */
 /* TIMER code */
 
@@ -668,7 +660,7 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 
 /* blink the led on pin @led@, @c@ times */
 void blinkN(uint32_t *gpio, int led, int c) { 
-  /* ***  COMPLETE the code here  ***  */
+  /* ***  COMPLETE the code here Abdullah ***  */
 }
 
 /* ======================================================= */
