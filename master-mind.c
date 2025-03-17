@@ -209,7 +209,6 @@ static int timed_out = 0;
 
 int failure (int fatal, const char *message, ...);
 void waitForEnter (void);
-void waitForButton (uint32_t *gpio, int button);
 
 /* ======================================================= */
 /* SECTION: hardware interface (LED, button, LCD display)  */
@@ -240,7 +239,10 @@ int readButton(uint32_t *gpio, int button);
 
 /* wait for a button input on pin number @button@; @gpio@ is the mmaped GPIO base address */
 /* can use readButton(), depending on your implementation */
-void waitForButton (uint32_t *gpio, int button);
+void waitForButton (uint32_t *gpio, int button) {
+  for(int i = 0;)
+  /* ***  COMPLETE the code here, just C no Assembler; you can use readButton ***  */
+}
 
 /* ======================================================= */
 /* SECTION: game logic                                     */

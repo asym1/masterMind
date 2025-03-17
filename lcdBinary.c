@@ -87,7 +87,3 @@ void writeLED(uint32_t *gpio, int led, int value) {
 int readButton(uint32_t *gpio, int button) {
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
-
-void waitForButton(uint32_t *gpio, int button) {
-  /* ***  COMPLETE the code here, just C no Assembler; you can use readButton ***  */
-}
