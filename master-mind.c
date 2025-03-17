@@ -688,7 +688,6 @@ int main (int argc, char *argv[])
   int c, d, buttonPressed, rel, foo;
   int *attSeq;
 
-  int pinLED = LED, pin2LED2 = LED2, pinButton = BUTTON;
   int fSel, shift, pin,  clrOff, setOff, off, res;
   int fd ;
 
@@ -942,7 +941,7 @@ int main (int argc, char *argv[])
 
   // starting the game
   fprintf(stderr, "Waiting for button");
-  waitForButton (gpio, pinButton);
+  waitForButton (gpio, BUTTON);
   fprintf(stderr, "Button Pressed");
   // -----------------------------------------------------------------------------
   // +++++ main loop
