@@ -54,26 +54,15 @@ int failure (int fatal, const char *message, ...);
 
 /* this version needs gpio as argument, because it is in a separate file */
 void digitalWrite (uint32_t *gpio, int pin, int value) {
-  int secondDigit = pin;
-  while(secondDigit > 10){
-    secondDigit -= 10;
-  }
+  int secondDigit = pin%10;
+  int reg = 0;
   if (value == 1) {
-    if (pin - 32 <= 0) {
-      (*(gpio + 7)) = (*(gpio + 7)) | (1 << (secondDigit * 3));
-    }
-    else {
-      (*(gpio + 8)) = (*(gpio + 8)) | (1 << (secondDigit * 3));
-    }
+    pin-32 <=0 ? reg = 7 : reg = 8;
   }
   else {
-    if (pin - 32 <= 0) {
-      (*(gpio + 10)) = (*(gpio + 10)) | (1 << (secondDigit * 3));
-    }
-    else {
-      (*(gpio + 11)) = (*(gpio + 11)) | (1 << (secondDigit * 3));
-    }
+    pin-32 <=0 ? reg = 10 : reg = 11;
   }
+  (*(gpio + reg)) = (*(gpio + reg)) | (1 << (secondDigit * 3));
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
 
