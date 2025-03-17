@@ -240,8 +240,9 @@ int readButton(uint32_t *gpio, int button);
 /* wait for a button input on pin number @button@; @gpio@ is the mmaped GPIO base address */
 /* can use readButton(), depending on your implementation */
 void waitForButton (uint32_t *gpio, int button) {
-  for(int i = 0;)
-  /* ***  COMPLETE the code here, just C no Assembler; you can use readButton ***  */
+  while(readButton(gpio,button) == LOW) {
+    delay(10);
+  }
 }
 
 /* ======================================================= */
