@@ -76,7 +76,7 @@ void pinMode(uint32_t *gpio, int pin, int mode) {
     fSel++;
   }
   shift = (pin%10*3);
-  *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | 1 << shift;
+  *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (1 << shift);
 }
 
 void writeLED(uint32_t *gpio, int led, int value) {
