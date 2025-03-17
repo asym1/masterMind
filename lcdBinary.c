@@ -58,8 +58,16 @@ void digitalWrite (uint32_t *gpio, int pin, int value) {
 }
 
 // adapted from setPinMode
-void pinMode(uint32_t *gpio, int pin, int mode /*, int fSel, int shift */) {
-  /* ***  COMPLETE the code here, using inline Assembler  ***  */
+void pinMode(uint32_t *gpio, int pin, int mode) {
+  int fSel = 0, shift = 0;
+  for(int i = 10;i <= 60; i+=10) {
+    if(pin < i && pin >= i-10) {
+      break;
+    }
+    fSel++;
+  }
+  shift = (pin%10*3);
+  *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | 1 << shift;
 }
 
 void writeLED(uint32_t *gpio, int led, int value) {
