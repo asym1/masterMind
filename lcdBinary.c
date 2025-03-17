@@ -54,6 +54,26 @@ int failure (int fatal, const char *message, ...);
 
 /* this version needs gpio as argument, because it is in a separate file */
 void digitalWrite (uint32_t *gpio, int pin, int value) {
+  int secondDigit = pin;
+  while(secondDigit > 10){
+    secondDigit -= 10;
+  }
+  if (value == 1) {
+    if (pin - 32 <= 0) {
+      (*(gpio + 7)) = (*(gpio + 7)) | (1 << (secondDigit * 3));
+    }
+    else {
+      (*(gpio + 8)) = (*(gpio + 8)) | (1 << (secondDigit * 3));
+    }
+  }
+  else {
+    if (pin - 32 <= 0) {
+      (*(gpio + 10)) = (*(gpio + 10)) | (1 << (secondDigit * 3));
+    }
+    else {
+      (*(gpio + 11)) = (*(gpio + 11)) | (1 << (secondDigit * 3));
+    }
+  }
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
 
@@ -71,6 +91,7 @@ void pinMode(uint32_t *gpio, int pin, int mode) {
 }
 
 void writeLED(uint32_t *gpio, int led, int value) {
+  digitalWrite(gpio, led, value);
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
 
