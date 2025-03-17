@@ -668,11 +668,10 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 /* blink the led on pin @led@, @c@ times */
 void blinkN(uint32_t *gpio, int led, int c) { 
   for(int i = 0; i < c; i++){
-    writeled(gpio, led, 1);
-    sleep(1); // change this when amr finishes timer.
-    writeled(gpio, led, 0);
+    writeLED(gpio, led, 1);
+    delay(1000);
+    writeLED(gpio, led, 0);
   }
-  /* ***  COMPLETE the code here Abdullah ***  */
 }
 
 /* ======================================================= */
@@ -831,7 +830,9 @@ int main (int argc, char *argv[])
   // -------------------------------------------------------
   // Configuration of LED and BUTTON
 
-  /* ***  COMPLETE the code here  ***  */
+  pinMode(gpio,LED,OUTPUT);
+  pinMode(gpio,LED2,OUTPUT);
+  pinMode(gpio,BUTTON,INPUT);
   
   // -------------------------------------------------------
   // INLINED version of lcdInit (can only deal with one LCD attached to the RPi):
@@ -926,37 +927,42 @@ int main (int argc, char *argv[])
   // -----------------------------------------------------------------------------
   // Start of game
   fprintf(stderr,"Printing welcome message on the LCD display ...\n");
-  /* ***  COMPLETE the code here  ***  */
-
+  //LED SEQUENCE FOR MOHAM
+  blinkN(gpio, LED2, 1);
+  blinkN(gpio, LED, 1);
+  blinkN(gpio, LED2, 1);
+  blinkN(gpio, LED, 1);
+  blinkN(gpio, LED2, 1);
+  fprintf(stderr, "greeting complete");
   /* initialise the secret sequence */
   if (!opt_s)
     initSeq();
   if (debug)
     showSeq(theSeq);
 
-  // optionally one of these 2 calls:
-  // waitForEnter () ; 
-  // waitForButton (gpio, pinButton) ;
-
+  // starting the game
+  fprintf(stderr, "Waiting for button");
+  waitForButton (gpio, pinButton);
+  fprintf(stderr, "Button Pressed");
   // -----------------------------------------------------------------------------
   // +++++ main loop
-  while (!found) {
-    attempts++;
-
-    /* ******************************************************* */
-    /* ***  COMPLETE the code here  ***                        */
-    /* this needs to implement the main loop of the game:      */
-    /* check for button presses and count them                 */
-    /* store the input numbers in the sequence @attSeq@        */
-    /* compute the match with the secret sequence, and         */
-    /* show the result                                         */
-    /* see CW spec for details                                 */
-    /* ******************************************************* */
-  }
-  if (found) {
-      /* ***  COMPLETE the code here  ***  */
-  } else {
-    fprintf(stdout, "Sequence not found\n");
-  }
+  // while (!found) {
+  //   attempts++;
+    
+  //   /* ******************************************************* */
+  //   /* ***  COMPLETE the code here  ***                        */
+  //   /* this needs to implement the main loop of the game:      */
+  //   /* check for button presses and count them                 */
+  //   /* store the input numbers in the sequence @attSeq@        */
+  //   /* compute the match with the secret sequence, and         */
+  //   /* show the result                                         */
+  //   /* see CW spec for details                                 */
+  //   /* ******************************************************* */
+  // }
+  // if (found) {
+  //     /* ***  COMPLETE the code here  ***  */
+  // } else {
+  //   fprintf(stdout, "Sequence not found\n");
+  // }
   return 0;
 }
