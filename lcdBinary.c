@@ -54,7 +54,7 @@ int failure (int fatal, const char *message, ...);
 
 /* this version needs gpio as argument, because it is in a separate file */
 void digitalWrite (uint32_t *gpio, int pin, int value) {
-  int secondDigit = pin%10;
+  int shift = pin % 10 * 3;
   int reg = 0;
   if (value == 1) {
     pin-32 <=0 ? reg = 7 : reg = 8;
@@ -62,7 +62,7 @@ void digitalWrite (uint32_t *gpio, int pin, int value) {
   else {
     pin-32 <=0 ? reg = 10 : reg = 11;
   }
-  (*(gpio + reg)) = (*(gpio + reg)) | (1 << (secondDigit * 3));
+  (*(gpio + reg)) = (*(gpio + reg)) & ~(7 << shift) | (1 << shift);
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
 
@@ -85,5 +85,13 @@ void writeLED(uint32_t *gpio, int led, int value) {
 }
 
 int readButton(uint32_t *gpio, int button) {
+  GPLEV = (*(gpio + 13)); // GPLEV returns the value of the pin (week 3 tutorial slides, page 6).
+  shift = (button % 10) * 3;
+
+  int value = 0;
+  if((GPLEV) & (1 << (shift & 31)) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
+    value = 1;
+  }  
+  return value;
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
