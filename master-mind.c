@@ -662,6 +662,11 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 
 /* blink the led on pin @led@, @c@ times */
 void blinkN(uint32_t *gpio, int led, int c) { 
+  for(int i = 0; i < c; i++){
+    writeled(gpio, led, 1);
+    sleep(1); // change this when amr finishes timer.
+    writeled(gpio, led, 0);
+  }
   /* ***  COMPLETE the code here Abdullah ***  */
 }
 
