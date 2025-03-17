@@ -332,7 +332,11 @@ static uint64_t startT, stopT;
 /* you may need this function in timer_handler() below  */
 /* use the libc fct gettimeofday() to implement it      */
 uint64_t timeInMicroseconds(){
-  /* ***  COMPLETE the code here  ***  */
+  struct timeval tv;
+  uint64_t now;
+  gettimeofday (&tv, NULL) ;
+  now = (uint64_t)tv.tv_sec * (uint64_t)1000 + (uint64_t)(tv.tv_usec / 1000) ; // in ms
+  return now;
 }
 
 /* this should be the callback, triggered via an interval timer, */
