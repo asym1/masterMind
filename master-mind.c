@@ -240,6 +240,9 @@ int readButton(uint32_t *gpio, int button);
 /* wait for a button input on pin number @button@; @gpio@ is the mmaped GPIO base address */
 /* can use readButton(), depending on your implementation */
 void waitForButton (uint32_t *gpio, int button) {
+  /* from abdullah, why don't we add a init timer call and if we 3 seconds pass (when timer handler is called we break out of the while loop).
+  / and add a counter that increments each time a button is pressed and after 3 seconds store the count into and array of 3 ints reset the counter and do it 2 more times.
+  */  
   while(readButton(gpio,button) == LOW) {
     delay(10);
   }
