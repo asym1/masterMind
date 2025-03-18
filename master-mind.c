@@ -48,7 +48,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdarg.h>
-
+#include <signal.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
@@ -349,8 +349,30 @@ void timer_handler (int signum) {
 
 /* initialise time-stamps, setup an interval timer, and install the timer_handler callback */
 void initITimer(uint64_t timeout){
-  /* ***  COMPLETE the code here  ***  */
+  struct sigaction sa; // idk why it works in main bas not inittimer.
+  struct itimerval timer;
+  fprintf(stderr, "adding a timer with 3 second delay\n");
+ 
+  
+  memset(&sa, 0, sizeof (sa));
+  sa.sa_handler = &timer_handler; // sig. action handler set to timer handler.
+
+  sigaction(SIGALRM, &sa, NULL);
+ 
+  // expire time 3 seconds
+  timer.it_value.tv_sec = 3;
+  timer.it_value.tv_usec = 3000000;
+  
+  timer.it_interval.tv_sec = 3;
+  timer.it_interval.tv_usec = 3000000;
+  // actually sets the timer.
+  setitimer(ITIMER_REAL, &timer, NULL);
+ 
+  // start time of the timer.
+  startT = timeInMicroseconds();
+
 }
+
 
 /* ======================================================= */
 /* SECTION: Aux function                                   */
