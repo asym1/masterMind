@@ -86,10 +86,10 @@ void writeLED(uint32_t *gpio, int led, int value) {
 
 int readButton(uint32_t *gpio, int button) {
   uint32_t GPLEV = (*(gpio + 13)); // GPLEV returns the value of the pin (week 3 tutorial slides, page 6).
-  int shift = (button % 10) * 3;
+
 
   int value = 0;
-  if((GPLEV) & (1 << (shift & 31)) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
+  if(((GPLEV) & (1 << (button & 31))) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
     value = 1;
   }  
   return value;
