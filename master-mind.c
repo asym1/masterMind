@@ -149,6 +149,7 @@ static int* theSeq = NULL;
 
 static int *seq1, *seq2, *cpy1, *cpy2;
 
+
 /* --------------------------------------------------------------------------- */
 
 // data structure holding data on the representation of the LCD
@@ -264,9 +265,9 @@ int readButton(uint32_t *gpio, int button) {
   int shift = (button % 10) * 3;
 
   int value = 0;
-  if((GPLEV) & (1 << (shift & 31)) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
+  if((GPLEV) & (1 << (shift & 31)) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3).
     value = 1;
-  }  
+  }
   return value;
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
@@ -345,6 +346,7 @@ void showMatches(int*  code, /* only for debugging */ int *seq1, int *seq2, /* o
 /* parse an integer value as a list of digits, and put them into @seq@ */
 /* needed for processing command-line with options -s or -u            */
 // from amr: turns 123 -> [1,2,3] using C++ trick
+// not using this. ask later
 void readSeq(int *seq, int val) {
   int i = 2;
   while(val) {
@@ -373,14 +375,15 @@ uint64_t timeInMicroseconds(){
   struct timeval tv;
   uint64_t now;
   gettimeofday (&tv, NULL) ;
-  now = (uint64_t)tv.tv_sec * (uint64_t)1000 + (uint64_t)(tv.tv_usec / 1000) ; // in ms
+  now = (uint64_t)tv.tv_sec * (uint64_t)1000000 + (uint64_t)(tv.tv_usec / 1000000) ; // in ms
   return now;
 }
 
 /* this should be the callback, triggered via an interval timer, */
 /* that is set-up through a call to sigaction() in the main fct. */
 void timer_handler (int signum) {
-  /* ***  COMPLETE the code here  ***  */
+  stopT = timeInMicroseconds();
+  timed_out = 1;
 }
 
 
@@ -396,18 +399,17 @@ void initITimer(uint64_t timeout){
 
   sigaction(SIGALRM, &sa, NULL);
 
-  // expire time 3 seconds
-  timer.it_value.tv_sec = 3;
-  timer.it_value.tv_usec = 3000000;
+  // expire time 3 seconds , subject to chane
+  timer.it_value.tv_sec = timeout;
+  timer.it_value.tv_usec = 0;
 
-  timer.it_interval.tv_sec = 3;
-  timer.it_interval.tv_usec = 3000000;
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = 0;
   // actually sets the timer.
   setitimer(ITIMER_REAL, &timer, NULL);
 
   // start time of the timer.
   startT = timeInMicroseconds();
-
 }
 
 
@@ -1007,23 +1009,48 @@ int main (int argc, char *argv[])
   fprintf(stderr, "Button Pressed");
   // -----------------------------------------------------------------------------
   // +++++ main loop
-  // while (!found) {
-  //   attempts++;
-    
-  //   /* ******************************************************* */
-  //   /* ***  COMPLETE the code here  ***                        */
-  //   /* this needs to implement the main loop of the game:      */
-  //   /* check for button presses and count them                 */
-  //   /* store the input numbers in the sequence @attSeq@        */
-  //   /* compute the match with the secret sequence, and         */
-  //   /* show the result                                         */
-  //   /* see CW spec for details                                 */
-  //   /* ******************************************************* */
-  // }
-  // if (found) {
-  //     /* ***  COMPLETE the code here  ***  */
-  // } else {
-  //   fprintf(stdout, "Sequence not found\n");
-  // }
+  while (!found) {
+    attempts++;
+    fprintf(stderr, "starting guess now");
+    int cnt=0;
+    while(cnt < 3) {
+      initITimer(3);
+      int lastPressed = LOW;
+      int buttonPresses = 0;
+      while(!timed_out) {
+        int pressed = readButton(gpio, BUTTON);
+        if(pressed && lastPressed == LOW) {
+          buttonPresses++;
+          delayMicroseconds(250000);
+        }
+        lastPressed = pressed;
+      }
+      if(buttonPresses > 0) {
+        seq2[cnt] = buttonPresses;
+        cnt++;
+        blinkN(gpio,LED2,1);
+        blinkN(gpio, LED, buttonPresses);
+      }
+    }
+    blinkN(gpio, LED2, 2);
+    int *currMatches = countMatches(seq1, seq2);
+    blinkN(gpio, LED, currMatches[0]);
+    blinkN(gpio, LED2, 1);
+    blinkN(gpio, LED, currMatches[1]);
+
+    if(currMatches[0] == 3) {
+      found = HIGH;
+    }else {
+      blinkN(gpio, LED2, 3);
+      timed_out = 0;
+    }
+  }
+  if (found) {
+    writeLED(gpio, LED2, HIGH);
+    blinkN(gpio, LED, 3);
+    printf("SUCCESS");
+  } else {
+    fprintf(stdout, "Sequence not found\n");
+  }
   return 0;
 }
