@@ -56,13 +56,14 @@ int failure (int fatal, const char *message, ...);
 void digitalWrite (uint32_t *gpio, int pin, int value) {
   int shift = pin % 10 * 3;
   int reg = 0;
+  int copy = pin - 32;
   if (value == 1) {
-    (pin-32 <=0) ? (reg = 7) : (reg = 8);
+    (copy <=0) ? (reg = 7) : (reg = 8);
   }
   else {
-    (pin-32 <=0) ? (reg = 10) : (reg = 11);
+    (copy <=0) ? (reg = 10) : (reg = 11);
   }
-  (*(gpio + reg)) = (*(gpio + reg)) & ~(7 << shift) | (1 << shift);
+  (*(gpio + reg)) = (1 << pin);
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
 

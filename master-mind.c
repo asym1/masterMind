@@ -697,9 +697,10 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 /* blink the led on pin @led@, @c@ times */
 void blinkN(uint32_t *gpio, int led, int c) {
   for(int i = 0; i < c; i++){
-    writeLED(gpio, led, 1);
-    delay(1000);
-    writeLED(gpio, led, 0);
+    digitalWrite(gpio, led, 1);
+    delay(300);
+    digitalWrite(gpio, led, 0);
+    delay(300);
   }
 }
 
@@ -728,6 +729,8 @@ int main (int argc, char *argv[])
   int t ;
 
   char buf [32] ;
+
+  srand(time(NULL));
 
   // variables for command-line processing
   char str_in[20], str[20] = "some text";
