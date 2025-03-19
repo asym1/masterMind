@@ -225,17 +225,51 @@ void delay (unsigned int howLong);
 /* These are just prototypes; you need to complete the code for each function */
 
 /* send a @value@ (LOW or HIGH) on pin number @pin@; @gpio@ is the mmaped GPIO base address */
-void digitalWrite (uint32_t *gpio, int pin, int value);
+void digitalWrite (uint32_t *gpio, int pin, int value) {
+  int shift = pin % 10 * 3;
+  int reg = 0;
+  if (value == 1) {
+    pin-32 <=0 ? reg = 7 : reg = 8;
+  }
+  else {
+    pin-32 <=0 ? reg = 10 : reg = 11;
+  }
+  (*(gpio + reg)) = (*(gpio + reg)) & ~(7 << shift) | (1 << shift);
+  /* ***  COMPLETE the code here, using inline Assembler  ***  */
+}
 
 /* set the @mode@ of a GPIO @pin@ to INPUT or OUTPUT; @gpio@ is the mmaped GPIO base address */
-void pinMode(uint32_t *gpio, int pin, int mode);
+void pinMode(uint32_t *gpio, int pin, int mode) {
+  int fSel = 0, shift = 0;
+  for(int i = 10;i <= 60; i+=10) {
+    if(pin < i && pin >= i-10) {
+      break;
+    }
+    fSel++;
+  }
+  shift = (pin%10*3);
+  *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (1 << shift);
+}
 
 /* send a @value@ (LOW or HIGH) on pin number @pin@; @gpio@ is the mmaped GPIO base address */
 /* can use digitalWrite(), depending on your implementation */
-void writeLED(uint32_t *gpio, int led, int value);
+void writeLED(uint32_t *gpio, int led, int value) {
+  digitalWrite(gpio, led, value);
+  /* ***  COMPLETE the code here, using inline Assembler  ***  */
+}
 
 /* read a @value@ (LOW or HIGH) from pin number @pin@ (a button device); @gpio@ is the mmaped GPIO base address */
-int readButton(uint32_t *gpio, int button);
+int readButton(uint32_t *gpio, int button) {
+  uint32_t GPLEV = (*(gpio + 13)); // GPLEV returns the value of the pin (week 3 tutorial slides, page 6).
+  int shift = (button % 10) * 3;
+
+  int value = 0;
+  if((GPLEV) & (1 << (shift & 31)) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
+    value = 1;
+  }  
+  return value;
+  /* ***  COMPLETE the code here, using inline Assembler  ***  */
+}
 
 /* wait for a button input on pin number @button@; @gpio@ is the mmaped GPIO base address */
 /* can use readButton(), depending on your implementation */
