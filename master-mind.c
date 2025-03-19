@@ -982,9 +982,13 @@ int main (int argc, char *argv[])
     fprintf(stderr, "starting guess now");
     int cnt=0;
     while(cnt < 3) {
-      initITimer(3);
+      initITimer(3); //3 second timer begins
+
+      //initialize variables related to button presses
       int lastPressed = LOW;
       int buttonPresses = 0;
+
+      //pauses execution to catch any button presses
       while(!timed_out) {
         int pressed = readButton(gpio, BUTTON);
         if(pressed && lastPressed == LOW) {
@@ -993,6 +997,8 @@ int main (int argc, char *argv[])
         }
         lastPressed = pressed;
       }
+
+      //if they pressed any button during the 3 seconds
       if(buttonPresses > 0) {
         seq2[cnt] = buttonPresses;
         cnt++;
