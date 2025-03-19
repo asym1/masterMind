@@ -126,7 +126,7 @@
 // =======================================================
 // char data for the CGRAM, i.e. defining new characters for the display
 
-static unsigned char newChar [8] = 
+static unsigned char newChar [8] =
 {
   0b11111,
   0b10001,
@@ -209,7 +209,7 @@ static int timed_out = 0;
 
 int failure (int fatal, const char *message, ...);
 void waitForEnter (void);
-
+void delay (unsigned int howLong);
 /* ======================================================= */
 /* SECTION: hardware interface (LED, button, LCD display)  */
 /* ------------------------------------------------------- */
@@ -242,7 +242,7 @@ int readButton(uint32_t *gpio, int button);
 void waitForButton (uint32_t *gpio, int button) {
   /* from abdullah, why don't we add a init timer call and if we 3 seconds pass (when timer handler is called we break out of the while loop).
   / and add a counter that increments each time a button is pressed and after 3 seconds store the count into and array of 3 ints reset the counter and do it 2 more times.
-  */  
+  */
   while(readButton(gpio,button) == LOW) {
     delay(10);
   }
@@ -310,7 +310,7 @@ void showMatches(int*  code, /* only for debugging */ int *seq1, int *seq2, /* o
 
 /* parse an integer value as a list of digits, and put them into @seq@ */
 /* needed for processing command-line with options -s or -u            */
-// from amr: turns 123 -> [1,2,3] using C++ trick 
+// from amr: turns 123 -> [1,2,3] using C++ trick
 void readSeq(int *seq, int val) {
   int i = 2;
   while(val) {
@@ -355,22 +355,22 @@ void initITimer(uint64_t timeout){
   struct sigaction sa; // idk why it works in main bas not inittimer.
   struct itimerval timer;
   fprintf(stderr, "adding a timer with 3 second delay\n");
- 
-  
+
+
   memset(&sa, 0, sizeof (sa));
   sa.sa_handler = &timer_handler; // sig. action handler set to timer handler.
 
   sigaction(SIGALRM, &sa, NULL);
- 
+
   // expire time 3 seconds
   timer.it_value.tv_sec = 3;
   timer.it_value.tv_usec = 3000000;
-  
+
   timer.it_interval.tv_sec = 3;
   timer.it_interval.tv_usec = 3000000;
   // actually sets the timer.
   setitimer(ITIMER_REAL, &timer, NULL);
- 
+
   // start time of the timer.
   startT = timeInMicroseconds();
 
@@ -619,7 +619,7 @@ void lcdDisplay (struct lcdDataStruct *lcd, int state)
   else
     lcdControl &= ~LCD_DISPLAY_CTRL ;
 
-  lcdPutCommand (lcd, LCD_CTRL | lcdControl) ; 
+  lcdPutCommand (lcd, LCD_CTRL | lcdControl) ;
 }
 
 void lcdCursor (struct lcdDataStruct *lcd, int state)
@@ -629,7 +629,7 @@ void lcdCursor (struct lcdDataStruct *lcd, int state)
   else
     lcdControl &= ~LCD_CURSOR_CTRL ;
 
-  lcdPutCommand (lcd, LCD_CTRL | lcdControl) ; 
+  lcdPutCommand (lcd, LCD_CTRL | lcdControl) ;
 }
 
 void lcdCursorBlink (struct lcdDataStruct *lcd, int state)
@@ -639,7 +639,7 @@ void lcdCursorBlink (struct lcdDataStruct *lcd, int state)
   else
     lcdControl &= ~LCD_BLINK_CTRL ;
 
-  lcdPutCommand (lcd, LCD_CTRL | lcdControl) ; 
+  lcdPutCommand (lcd, LCD_CTRL | lcdControl) ;
 }
 
 /*
@@ -659,7 +659,7 @@ void lcdPutchar (struct lcdDataStruct *lcd, unsigned char data)
     lcd->cx = 0 ;
     if (++lcd->cy == lcd->rows)
       lcd->cy = 0 ;
-    
+
     // TODO: inline computation of address and eliminate rowOff
     lcdPutCommand (lcd, lcd->cx + (LCD_DGRAM | (lcd->cy>0 ? 0x40 : 0x00)   /* rowOff [lcd->cy] */  )) ;
   }
@@ -691,7 +691,7 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 /* interface on top of the low-level pin I/O code */
 
 /* blink the led on pin @led@, @c@ times */
-void blinkN(uint32_t *gpio, int led, int c) { 
+void blinkN(uint32_t *gpio, int led, int c) {
   for(int i = 0; i < c; i++){
     writeLED(gpio, led, 1);
     delay(1000);
@@ -719,7 +719,7 @@ int main (int argc, char *argv[])
   int  exact, contained;
   char str1[32];
   char str2[32];
-  
+
   struct timeval t1, t2 ;
   int t ;
 
@@ -727,8 +727,9 @@ int main (int argc, char *argv[])
 
   // variables for command-line processing
   char str_in[20], str[20] = "some text";
-  int verbose = 0, debug = 0, help = 0, opt_m = 0, opt_n = 0, opt_s = 0, unit_test = 0, res_matches = 0;
-  
+  int verbose = 0, debug = 0, help = 0, opt_m = 0, opt_n = 0, opt_s = 0, unit_test = 0;
+  int *res_matches = 0;
+
   // -------------------------------------------------------
   // process command-line arguments
 
@@ -750,7 +751,7 @@ int main (int argc, char *argv[])
 	unit_test = 1;
 	break;
       case 's':
-	opt_s = atoi(optarg); 
+	opt_s = atoi(optarg);
 	break;
       default: /* '?' */
 	fprintf(stderr, "Usage: %s [-h] [-v] [-d] [-u <seq1> <seq2>] [-s <secret seq>]  \n", argv[0]);
@@ -760,13 +761,13 @@ int main (int argc, char *argv[])
   }
 
   if (help) {
-    fprintf(stderr, "MasterMind program, running on a Raspberry Pi, with connected LED, button and LCD display\n"); 
-    fprintf(stderr, "Use the button for input of numbers. The LCD display will show the matches with the secret sequence.\n"); 
-    fprintf(stderr, "For full specification of the program see: https://www.macs.hw.ac.uk/~hwloidl/Courses/F28HS/F28HS_CW2_2022.pdf\n"); 
+    fprintf(stderr, "MasterMind program, running on a Raspberry Pi, with connected LED, button and LCD display\n");
+    fprintf(stderr, "Use the button for input of numbers. The LCD display will show the matches with the secret sequence.\n");
+    fprintf(stderr, "For full specification of the program see: https://www.macs.hw.ac.uk/~hwloidl/Courses/F28HS/F28HS_CW2_2022.pdf\n");
     fprintf(stderr, "Usage: %s [-h] [-v] [-d] [-u <seq1> <seq2>] [-s <secret seq>]  \n", argv[0]);
     exit(EXIT_SUCCESS);
   }
-  
+
   if (unit_test && optind >= argc-1) {
     fprintf(stderr, "Expected 2 arguments after option -u\n");
     exit(EXIT_FAILURE);
@@ -791,7 +792,7 @@ int main (int argc, char *argv[])
   cpy2 = (int*)malloc(seqlen*sizeof(int));
 
   // check for -u option, and if so run a unit test on the matching function
-  if (unit_test && argc > optind+1) { // more arguments to process; only needed with -u 
+  if (unit_test && argc > optind+1) { // more arguments to process; only needed with -u
     strcpy(str_in, argv[optind]);
     opt_m = atoi(str_in);
     strcpy(str_in, argv[optind+1]);
@@ -817,12 +818,12 @@ int main (int argc, char *argv[])
       showSeq(theSeq);
     }
   }
-  
+
   // -------------------------------------------------------
   // LCD constants, hard-coded: 16x2 display, using a 4-bit connection
-  bits = 4; 
-  cols = 16; 
-  rows = 2; 
+  bits = 4;
+  cols = 16;
+  rows = 2;
   // -------------------------------------------------------
 
   printf ("Raspberry Pi LCD driver, for a %dx%d display (%d-bit wiring) \n", cols, rows, bits) ;
@@ -835,12 +836,12 @@ int main (int argc, char *argv[])
   cpy1 = (int*)malloc(seqlen*sizeof(int));
   cpy2 = (int*)malloc(seqlen*sizeof(int));
 
-  // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
   // constants for RPi2
   gpiobase = 0x3F200000 ;
 
   // -----------------------------------------------------------------------------
-  // memory mapping 
+  // memory mapping
   // Open the master /dev/memory device
 
   if ((fd = open ("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC) ) < 0)
@@ -850,8 +851,10 @@ int main (int argc, char *argv[])
   gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, gpiobase) ;
   if ((int32_t)gpio == -1)
     return failure (FALSE, "setup: mmap (GPIO) failed: %s\n", strerror (errno)) ;
+  else
+    fprintf(stderr, "NB: gpio = %x for gpiobase %x\n", gpio, gpiobase);
 
-  // -------------------------------------------------------
+  // -----------------------------------------------------------------------------
   // Configuration of LED and BUTTON
 
   pinMode(gpio,LED,OUTPUT);
