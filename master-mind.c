@@ -698,9 +698,9 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 void blinkN(uint32_t *gpio, int led, int c) {
   for(int i = 0; i < c; i++){
     digitalWrite(gpio, led, 1);
-    delay(400);
+    delay(600);
     digitalWrite(gpio, led, 0);
-    delay(400);
+    delay(600);
   }
 }
 
@@ -713,6 +713,7 @@ int main (int argc, char *argv[])
   struct lcdDataStruct *lcd ;
   int bits, rows, cols ;
   unsigned char func ;
+  srand(time(NULL));
 
   int found = 0, attempts = 0, i, j, code;
   int c, d, buttonPressed, rel, foo;
@@ -729,8 +730,6 @@ int main (int argc, char *argv[])
   int t ;
 
   char buf [32] ;
-
-  srand(time(NULL));
 
   // variables for command-line processing
   char str_in[20], str[20] = "some text";
@@ -867,7 +866,6 @@ int main (int argc, char *argv[])
   pinMode(gpio,LED,OUTPUT);
   pinMode(gpio,LED2,OUTPUT);
   pinMode(gpio,BUTTON,INPUT);
-  
   // -------------------------------------------------------
   // INLINED version of lcdInit (can only deal with one LCD attached to the RPi):
   // you can use this code as-is, but you need to implement digitalWrite() and
@@ -961,28 +959,32 @@ int main (int argc, char *argv[])
   // -----------------------------------------------------------------------------
   // Start of game
   fprintf(stderr,"Printing welcome message on the LCD display ...\n");
+  lcdPosition(lcd, 0,0); lcdPuts(lcd, "Welcome!     ");
+  lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
   //LED SEQUENCE FOR MOHAM
   blinkN(gpio, LED2, 1);
   blinkN(gpio, LED, 1);
   blinkN(gpio, LED2, 1);
   blinkN(gpio, LED, 1);
   blinkN(gpio, LED2, 1);
-  fprintf(stderr, "greeting complete \n");
+  fprintf(stderr, "greeting complete\n");
+
   /* initialise the secret sequence */
   if (!opt_s)
     initSeq();
   if (debug)
     showSeq(theSeq);
 
+  showSeq(seq1);
   // starting the game
-  fprintf(stderr, "Waiting for button \n");
+  fprintf(stderr, "Waiting for button\n");
   waitForButton (gpio, BUTTON);
-  fprintf(stderr, "Button Pressed \n");
+  fprintf(stderr, "Button Pressed\n");
   // -----------------------------------------------------------------------------
   // +++++ main loop
   while (!found) {
     attempts++;
-    fprintf(stderr, "starting guess now \n");
+    fprintf(stderr, "starting guess now\n");
     int cnt=0;
     while(cnt < 3) {
       initITimer(3); //3 second timer begins
@@ -1001,7 +1003,6 @@ int main (int argc, char *argv[])
         lastPressed = pressed;
       }
 
-      //if they pressed any button during the 3 seconds
       if(buttonPresses > 0) {
         seq2[cnt] = buttonPresses;
         fprintf(stderr, "Color guessed: %d \n", buttonPresses);
@@ -1009,13 +1010,22 @@ int main (int argc, char *argv[])
         blinkN(gpio,LED2,1);
         blinkN(gpio, LED, buttonPresses);
       }
+      timed_out = 0;
     }
+    fprintf(stderr, "Round Over! \n");
     blinkN(gpio, LED2, 2);
     int *currMatches = countMatches(seq1, seq2);
+    char exactG[1];
+    char approxG[1];
+    sprintf(exactG, "%d", currMatches[0]);
+    sprintf(approxG, "%d", currMatches[1]);
+    char displayedMatches[8];
+    strcat(displayedMatches, exactG); strcat(displayedMatches, " "); strcat(displayedMatches, approxG); strcat(displayedMatches,"     ");
+    lcdPosition(lcd, 0,0); lcdPuts(lcd, displayedMatches);
+    lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
     blinkN(gpio, LED, currMatches[0]);
     blinkN(gpio, LED2, 1);
     blinkN(gpio, LED, currMatches[1]);
-
     if(currMatches[0] == 3) {
       found = HIGH;
     }else {
@@ -1026,9 +1036,16 @@ int main (int argc, char *argv[])
   if (found) {
     writeLED(gpio, LED2, HIGH);
     blinkN(gpio, LED, 3);
-    printf("SUCCESS");
+    lcdPosition(lcd, 0,0); lcdPuts(lcd, "SUCCESS!     ");
+    lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
+    lcdClear(lcd);
+    free(seq1);
+    free(seq2);
   } else {
-    fprintf(stdout, "Sequence not found\n");
+    fprintf(stdout, "Sequence not found \n");
+    lcdClear(lcd);
+    free(seq1);
+    free(seq2);
   }
   return 0;
 }
