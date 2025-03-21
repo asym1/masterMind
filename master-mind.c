@@ -698,9 +698,9 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 void blinkN(uint32_t *gpio, int led, int c) {
   for(int i = 0; i < c; i++){
     digitalWrite(gpio, led, 1);
-    delay(300);
+    delay(400);
     digitalWrite(gpio, led, 0);
-    delay(300);
+    delay(400);
   }
 }
 
@@ -967,7 +967,7 @@ int main (int argc, char *argv[])
   blinkN(gpio, LED2, 1);
   blinkN(gpio, LED, 1);
   blinkN(gpio, LED2, 1);
-  fprintf(stderr, "greeting complete");
+  fprintf(stderr, "greeting complete \n");
   /* initialise the secret sequence */
   if (!opt_s)
     initSeq();
@@ -975,14 +975,14 @@ int main (int argc, char *argv[])
     showSeq(theSeq);
 
   // starting the game
-  fprintf(stderr, "Waiting for button");
+  fprintf(stderr, "Waiting for button \n");
   waitForButton (gpio, BUTTON);
-  fprintf(stderr, "Button Pressed");
+  fprintf(stderr, "Button Pressed \n");
   // -----------------------------------------------------------------------------
   // +++++ main loop
   while (!found) {
     attempts++;
-    fprintf(stderr, "starting guess now");
+    fprintf(stderr, "starting guess now \n");
     int cnt=0;
     while(cnt < 3) {
       initITimer(3); //3 second timer begins
@@ -1004,6 +1004,7 @@ int main (int argc, char *argv[])
       //if they pressed any button during the 3 seconds
       if(buttonPresses > 0) {
         seq2[cnt] = buttonPresses;
+        fprintf(stderr, "Color guessed: %d \n", buttonPresses);
         cnt++;
         blinkN(gpio,LED2,1);
         blinkN(gpio, LED, buttonPresses);
