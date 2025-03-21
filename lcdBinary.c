@@ -111,27 +111,26 @@ void writeLED(uint32_t *gpio, int led, int value) {
 }
 
 int readButton(uint32_t *gpio, int button) {
-  uint32_t GPLEV = (*(gpio + 13)); // GPLEV returns the value of the pin (week 3 tutorial slides, page 6).
+  // uint32_t GPLEV = (*(gpio + 13)); // GPLEV returns the value of the pin (week 3 tutorial slides, page 6).
 
-
-  int value = 0;
-  if(((GPLEV) & (1 << (button & 31))) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
-    value = 1;
-  }  
-  return value;
+  // int value = 0;
+  // if(((GPLEV) & (1 << (button & 31))) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
+  //   value = 1;
+  // }  
+  // return value;
   asm volatile(
-    "\tmov r3 [r0, #32]\n"
-    "\tmov r5, #0\n" // r5 is the value given from button.
-    "\tAND r2, r2, #31\n"
-    "\tmov r6, #0b1\n"
-    "\tlsl r6, r2\n"
-    "\tAND r3, r6\n"
-    "\tcmp r3, #0\n"
-    "\tbeq end\n"
-    "\tadd r5, #1\n"
-    "\tend:\n" 
-         "\tmov r0, r5\n"
-         "\tbx lr\n"
+    "\tmov r3 [r0, #32]\n" 
+    "\tmov r5, #0\n" // r5 is the value given from button. 
+    "\tAND r2, r2, #31\n" 
+    "\tmov r6, #0b1\n" 
+    "\tlsl r6, r2\n"  
+    "\tAND r3, r6\n" 
+    "\tcmp r3, #0\n"  
+    "\tbeq end\n"  
+    "\tadd r5, #1\n" 
+    "\tend:\n"  
+         "\tmov r0, r5\n" 
+         "\tbx lr\n" 
   );
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
