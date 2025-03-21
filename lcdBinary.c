@@ -54,17 +54,40 @@ int failure (int fatal, const char *message, ...);
 
 /* this version needs gpio as argument, because it is in a separate file */
 void digitalWrite (uint32_t *gpio, int pin, int value) {
-  int shift = pin % 10 * 3;
-  int reg = 0;
-  int copy = pin - 32;
-  if (value == 1) {
-    (copy <=0) ? (reg = 7) : (reg = 8);
-  }
-  else {
-    (copy <=0) ? (reg = 10) : (reg = 11);
-  }
-  (*(gpio + reg)) = (1 << pin);
-  /* ***  COMPLETE the code here, using inline Assembler  ***  */
+  // int reg = 0;
+  // int copy = pin - 32;
+  // if (value == 1) {
+  //   (copy <=0) ? (reg = 7) : (reg = 8);
+  // }
+  // else {
+  //   (copy <=0) ? (reg = 10) : (reg = 11);
+  // }
+  // (*(gpio + reg)) = (1 << pin);
+  asm volatile(
+    "\tMOV r3, #0b1\n" // set r3 to 1.
+    "\tLSL r3, r3, r1\n"// shift r3 by pin number.
+    "\tMOV r4, r1\n" // copy pin into r4
+    "\tCMP r2, #1\n" // if it's 1 then set else clr.
+    "\tBNE low\n"
+    "\tCMP r4, #32\n" // if r4 is <= 32 then set0 else set1.
+    "\tBLS set0\n"
+    "\tMOV r5, #32\n" // set  to set1 (8) r5 is the bit number to be moved by for gpio
+    "\tb shift\n"
+    "\tset0:\n"
+           "\tMOV r5, #28\n" // set  to set0 (7)
+           "\tb shift\n"
+    "\tlow:\n"  
+          "\tCMP r4, #32\n" // if r4 is <= 32 then clr0 else clr1.
+          "\tBLS clr0\n"
+          "\tMOV r5, #44\n" // set  to clr1 (11)
+          "\tb shift\n"
+    "\tclr0:\n"
+           "\tMOV r5, #40\n" // set to clr0 (10)
+           "\tb shift\n"
+    "\tshift:\n"
+            "\tstr r3, [r0, r5]\n"
+  );
+
 }
 
 // adapted from setPinMode
@@ -94,5 +117,19 @@ int readButton(uint32_t *gpio, int button) {
     value = 1;
   }  
   return value;
+  asm volatile(
+    "\tmov r3 [r0, #32]\n"
+    "\tmov r4, #0\n" // r4 is the value given from button.
+    "\tAND r2, r2, #31\n"
+    "\tmov r5, #0b1\n"
+    "\tlsl r5, r2\n"
+    "\tAND r3, r5\n"
+    "\tcmp r3, #0\n"
+    "\tbeq end\n"
+    "\tadd r4, #1\n"
+    "\tend:\n" 
+         "\tmov r0, r4\n"
+         "\tbx lr\n"
+  );
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
 }
