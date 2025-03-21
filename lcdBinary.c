@@ -65,27 +65,29 @@ void digitalWrite (uint32_t *gpio, int pin, int value) {
   // (*(gpio + reg)) = (1 << pin);
   asm volatile(
     "\tMOV r3, #0b1\n" // set r3 to 1.
-    "\tLSL r3, r3, r1\n"// shift r3 by pin number.
-    "\tMOV r4, r1\n" // copy pin into r4
+    "\tMOV r4, r1\n"
+    "\tAND r4, r4, #31\n"
+    "\tLSL r3, r3, r4\n"// shift r3 by pin number.
+    "\tMOV r5, r1\n" // copy pin into r5
     "\tCMP r2, #1\n" // if it's 1 then set else clr.
     "\tBNE low\n"
-    "\tCMP r4, #32\n" // if r4 is <= 32 then set0 else set1.
+    "\tCMP r5, #32\n" // if r5 is <= 32 then set0 else set1.
     "\tBLS set0\n"
-    "\tMOV r5, #32\n" // set  to set1 (8) r5 is the bit number to be moved by for gpio
+    "\tMOV r6, #32\n" // set  to set1 (8) r6 is the bit number to be moved by for gpio
     "\tb shift\n"
     "\tset0:\n"
-           "\tMOV r5, #28\n" // set  to set0 (7)
+           "\tMOV r6, #28\n" // set  to set0 (7)
            "\tb shift\n"
     "\tlow:\n"  
-          "\tCMP r4, #32\n" // if r4 is <= 32 then clr0 else clr1.
+          "\tCMP r5, #32\n" // if r5 is <= 32 then clr0 else clr1.
           "\tBLS clr0\n"
-          "\tMOV r5, #44\n" // set  to clr1 (11)
+          "\tMOV r6, #44\n" // set  to clr1 (11)
           "\tb shift\n"
     "\tclr0:\n"
-           "\tMOV r5, #40\n" // set to clr0 (10)
+           "\tMOV r6, #40\n" // set to clr0 (10)
            "\tb shift\n"
     "\tshift:\n"
-            "\tstr r3, [r0, r5]\n"
+            "\tstr r3, [r0, r6]\n"
   );
 
 }
@@ -119,16 +121,16 @@ int readButton(uint32_t *gpio, int button) {
   return value;
   asm volatile(
     "\tmov r3 [r0, #32]\n"
-    "\tmov r4, #0\n" // r4 is the value given from button.
+    "\tmov r5, #0\n" // r5 is the value given from button.
     "\tAND r2, r2, #31\n"
-    "\tmov r5, #0b1\n"
-    "\tlsl r5, r2\n"
-    "\tAND r3, r5\n"
+    "\tmov r6, #0b1\n"
+    "\tlsl r6, r2\n"
+    "\tAND r3, r6\n"
     "\tcmp r3, #0\n"
     "\tbeq end\n"
-    "\tadd r4, #1\n"
+    "\tadd r5, #1\n"
     "\tend:\n" 
-         "\tmov r0, r4\n"
+         "\tmov r0, r5\n"
          "\tbx lr\n"
   );
   /* ***  COMPLETE the code here, using inline Assembler  ***  */
