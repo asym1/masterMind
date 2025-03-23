@@ -94,15 +94,44 @@ void digitalWrite (uint32_t *gpio, int pin, int value) {
 
 // adapted from setPinMode
 void pinMode(uint32_t *gpio, int pin, int mode) {
-  int fSel = 0, shift = 0;
-  for(int i = 10;i <= 60; i+=10) {
-    if(pin < i && pin >= i-10) {
-      break;
-    }
-    fSel++;
-  }
-  shift = (pin%10*3);
-  *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (mode << shift);
+  // int fSel = 0, shift = 0;
+  // for(int i = 10;i <= 60; i+=10) {
+  //   if(pin < i && pin >= i-10) {
+  //     break;
+  //   }
+  //   fSel++;
+  // }
+  // shift = (pin%10*3);
+  // *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (mode << shift);
+  asm volatile (
+    "\tmov r3, #0\n" // r3 is fsel.
+    "\tmov r4, r1\n" // r4 is shift
+    "\tmod r4, #10\n"
+    "\tmul r4, #3\n"
+    "\tmov r5, #10\n" //5 is i in the for loop.
+    "\tmov r7, r0\n" // copy gpio into r7
+    "\tmov r8, #0x7\n"
+    "\tb caller\n"
+    "\tcaller:\n" 
+         "\tcmp r5, #60\n"
+         "\tBGT sel\n"
+         "\tcmp r1, r5\n"
+         "\tblt loop\n"
+    "\tloop:\n" 
+       "\tmov r6, r5\n"
+       "\tSUB r6, r6, #10\n"
+       "\tcmp r1, r6\n"
+       "\tBGE sel\n"
+       "\tADD r5, r5, #10\n"
+       "\tINC r3\n"
+       "\tB caller\n"
+    "\tsel:\n"
+      "\tADD r7, r7, r3\n" // set r7 to gpio + fsel
+      "\tLSL r8, r8, r4\n" // 7 << shift
+      "\tAND r7, NOT r8\n" // gpio +fsel & ~(7 << shift)
+      "\tLSL r2, r2, r4\n" // mode << shift
+      "\tOR  r7, r2\n" 
+  );
 }
 
 void writeLED(uint32_t *gpio, int led, int value) {
