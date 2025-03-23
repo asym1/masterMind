@@ -980,6 +980,7 @@ int main (int argc, char *argv[])
   fprintf(stderr, "Waiting for button\n");
   waitForButton (gpio, BUTTON);
   fprintf(stderr, "Button Pressed\n");
+  delay(100);
   // -----------------------------------------------------------------------------
   // +++++ main loop
   while (!found) {
