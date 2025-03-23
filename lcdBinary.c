@@ -119,11 +119,11 @@ int readButton(uint32_t *gpio, int button) {
   // }  
   // return value;
   asm volatile(
-    "\tmov r3 [r0, #32]\n" 
+    "\tmov r3 [r0, #52]\n" 
     "\tmov r5, #0\n" // r5 is the value given from button. 
-    "\tAND r2, r2, #31\n" 
+    "\tAND r1, r1, #31\n" 
     "\tmov r6, #0b1\n" 
-    "\tlsl r6, r2\n"  
+    "\tlsl r6, r1\n" // r6 is the shifted value. 
     "\tAND r3, r6\n" 
     "\tcmp r3, #0\n"  
     "\tbeq end\n"  
