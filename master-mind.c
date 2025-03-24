@@ -287,12 +287,14 @@ int* countMatches(int *seq1, int *seq2) {
   int exact = 0;
   for(int i =0 ; i< 3; i++) {
       if(seq1[i] == seq2[i]) {
-          exact++;
+        exact++;
+        seq2[i] = 4; // preventing duplicate approximate values.
       }
       else {
           for(int j = 0; j < 3; j++) {
-              if(seq1[i] == seq2[j] || seq2[i] == seq1[j]) {
-                  approx++;
+              if(seq1[i] == seq2[j]) {
+                approx++;
+                seq2[j] = 4; // preventing duplicate approximate values.
               }
           }
       }
