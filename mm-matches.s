@@ -19,17 +19,20 @@
 @ otw there will be a clash with the main function in the C code
 .global         main
 main: 
-	LDR  R2, =secret	@ pointer to secret sequence
-	LDR  R3, =guess		@ pointer to guess sequence
-	mov R4, #0 @ approx. matches
-	mov R5, #0 @ exact matches
-	mov R6, #0 @ i
-	@ you probably need to initialise more values here
+	LDR  r2, =secret	@ pointer to secret sequence
+	LDR  r3, =guess		@ pointer to guess sequence
+	mov r4, #0 @ approx. matches
+	mov r5, #0 @ exact matches
+	mov r6, #0 @ i
+	mov r8, #0 @ j
+	@ amr mov r11 as an array of 2 values r4 and r5.  
+	
+
 
 	@ ... COMPLETE THE CODE BY ADDING YOUR CODE HERE, you should use sub-routines to structure your code
 
-exit:	@MOV	 R0, R4		@ load result to output register
-	MOV 	 R7, #1		@ load system call code
+exit:	@MOV	 r0, r11		@ load result to output register
+	MOV 	 r7, #1		@ load system call code
 	SWI 	 0		@ return this value
 
 @ -----------------------------------------------------------------------------
@@ -37,8 +40,46 @@ exit:	@MOV	 R0, R4		@ load result to output register
 
 @ this is the matching fct that should be callable from C	
 matches:			@ Input: R0, R1 ... ptr to int arrays to match ; Output: R0 ... exact matches (10s) and approx matches (1s) of base COLORS
+		cmp r6, #3
+		beq exit
+		cmp r2, r3
+		beq  exact
+		b approx
+exact:
+	 	add r5, r5, #1 @exact++
+		@ add code here: set r9[r6] to 4
+		add r6, r6, #1 @ i++
+		b matches
+approx:
+		@ add code set r3 back to r3[0]
+		cmp r2, r3
+		beq incApprox
+		@ add code here: got to the next value in r9
+		add r10, r10, #1 @ j++
+		add r3, #1, lsl #2 @ inc r3
+		cmp r2, r3
+		beq incApprox
+		@ add code here: got to the next value in r9
+		add r10, r10, #1 @ j++
+		add r3, #1, lsl #2 @ go to the next int
+		cmp r2, r3
+		beq incApprox
+		@ no matches at all go back
+		mov r10, #0 @ j = 0
+		sub r3, #3, lsl #2 @ set r3 back to r4[0]
+		add r3, r6, lsl #2 @ set r3 back to r3[i]
+		add r6, r6, #1 @ i++
+		b matches
+incApprox: 
+		str #4, [r3]
+		sub r3, r10, lsl #2 @ set r3 back to r3[0]
+		@add code here: set r9[r10] to 4
+		@ add code here: set r9 to r9[r6]
+		mov r10, #0
+		add r4, r4, #1 @ approx++
+		add r3, r4, lsl #2
+		b matches
 	@ COMPLETE THE CODE HERE
-
 @ show the sequence in R0, use a call to printf in libc to do the printing, a useful function when debugging 
 showseq: 			@ Input: R0 = pointer to a sequence of 3 int values to show
 	@ COMPLETE THE CODE HERE (OPTIONAL)
