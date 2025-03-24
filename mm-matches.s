@@ -21,7 +21,9 @@
 main: 
 	LDR  R2, =secret	@ pointer to secret sequence
 	LDR  R3, =guess		@ pointer to guess sequence
-
+	mov R4, #0 @ approx. matches
+	mov R5, #0 @ exact matches
+	mov R6, #0 @ i
 	@ you probably need to initialise more values here
 
 	@ ... COMPLETE THE CODE BY ADDING YOUR CODE HERE, you should use sub-routines to structure your code

@@ -145,7 +145,7 @@ int readButton(uint32_t *gpio, int button) {
   // }  
   // return value;
   asm volatile(
-    "\tmov r3, r0, [r0, #52]\n" 
+    "\tldr r3, [r0, #52]\n" 
     "\tmov r5, #0\n" // r5 is the value given from button. 
     "\tAND r1, r1, #31\n" 
     "\tmov r6, #0b1\n" 
