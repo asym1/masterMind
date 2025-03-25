@@ -7,7 +7,9 @@ tester=testm
 
 CC=gcc
 AS=as
-OPTS=-std=c99 -O2 -Wall -pedantic -g
+OPTS=-W
+# NOTE: for debugging, use -pedantic etc as below
+# OPTS=-std=c99 -O2 -Wall -pedantic -g
 
 all: $(prg) cw2 $(tester)
 
@@ -37,4 +39,3 @@ test:	$(tester)
 
 clean:
 	-rm $(prg) $(tester) cw2 *.o
-
