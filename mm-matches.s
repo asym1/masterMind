@@ -42,51 +42,61 @@ exit:
 matches:			@ Input: R0, R1 ... ptr to int arrays to match ; Output: R0 ... exact matches (10s) and approx matches (1s) of base COLORS
 		cmp r6, #3
 		beq addmatches
-		cmp r2, r3
+		bl access
+		cmp r11, r12
 		beq  exact
 		b approx
 exact:
 	 	add r5, r5, #10 @exact + 10
 		add r6, r6, #1 @ i++
-		add r2, r6, lsl #2 @ secret[current] to secret[i]
+		mov r9, #1 
+		add r2, r9, lsl #2 @ inc r2
 		mov r9, #4
-		str r9, [r3] @ given[current] = 4
-		add r3, r6, lsl #2 @ given [current] to given[i]
+		str r9, [r3] @ r3[current] = 4
+		add r3, r9, lsl #2 @ inc r2
 		b matches
 approx:
-		sub r3, r6, lsl #2
-		cmp r2, r3
+		sub r3, r6, lsl #2 @ r3[i] -> r3[0]
+		bl access
+		cmp r11, r12
 		beq incApprox
 		add r10, r10, #1 @ j++
 		mov r9, #1
 		add r3, r9, lsl #2 @ inc r3
-		cmp r2, r3
+		bl access
+		cmp r11, r12
 		beq incApprox
 		add r10, r10, #1 @ j++
 		add r3, r9, lsl #2 @ inc r3
-		cmp r2, r3
+		bl access
+		cmp r11, r12
 		beq incApprox
 		@ no matches at all go back
 		mov r10, #0 @ j = 0
-		mov r9, #3
-		sub r3, r9, lsl #2 @ set r3 back to r4[0]
+		mov r9, #2
+		sub r3, r9, lsl #2 @ set r3[2] back to r3[0]
 		add r3, r6, lsl #2 @ set r3 back to r3[i]
 		add r6, r6, #1 @ i++
 		b matches
 incApprox: 
 		mov r9, #4
-		str r9, [r3]
-		sub r3, r10, lsl #2 @ set r3 back to r3[0]
-		add r3, r6, lsl #2
-		mov r10, #0
+		str r9, [r3] @ r3[j] = 4
+		sub r3, r10, lsl #2 @ set r3[j] back to r3[0]
+		mov r10, #0 @ j = 0
 		add r4, r4, #1 @ approx++
-		add r6, r6, #1
+		add r6, r6, #1 @ i++
+		mov r9, #1
+		add r3, r6, lsl #2 @ r3[0] -> r3[i]
+		add r2, r9, lsl #2 @ r2[i-1] -> r2[i]
 		b matches
 addmatches:
 		add r5, r5, r4 @ r5 = exact + approx
 		mov r0, r5 @ r0 = r5
 		b exit
-		
+access:
+		ldr r11, [r2]
+		ldr r12, [r3]
+		bx lr
 .data
 
 @ constants about the basic setup of the game: length of sequence and number of colors	
@@ -149,4 +159,3 @@ guess2:	.word 3
 .align 4
 expect2: .byte 1
 	 .byte 0
-

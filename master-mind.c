@@ -209,7 +209,7 @@ static int timed_out = 0;
 int failure (int fatal, const char *message, ...);
 void waitForEnter (void);
 void delay (unsigned int howLong);
-
+extern int matches(int *seq1, int *seq2);
 
 /* ======================================================= */
 /* SECTION: hardware interface (LED, button, LCD display)  */
@@ -282,22 +282,23 @@ void showSeq(int *seq) {
 /* counts how many entries in seq2 match entries in seq1 */
 /* returns exact and approximate matches both encoded in one value */
 int countMatches(int *seq1, int *seq2) {
-  int returned = 0;
-  for(int i =0 ; i< 3; i++) {
-      if(seq1[i] == seq2[i]) {
-        returned+=10;
-        seq2[i] = 4; // preventing duplicate approximate values.
-      }
-      else {
-          for(int j = 0; j < 3; j++) {
-              if(seq1[i] == seq2[j]) {
-                returned++;
-                seq2[j] = 4; // preventing duplicate approximate values.
-              }
-          }
-      }
-  }
-  return returned;
+  // int returned = 0;
+  // for(int i =0 ; i< 3; i++) {
+  //     if(seq1[i] == seq2[i]) {
+  //       returned+=10;
+  //       seq2[i] = 4; // preventing duplicate approximate values.
+  //     }
+  //     else {
+  //         for(int j = 0; j < 3; j++) {
+  //             if(seq1[i] == seq2[j]) {
+  //               returned++;
+  //               seq2[j] = 4; // preventing duplicate approximate values.
+  //             }
+  //         }
+  //     }
+  // }
+  // return returned;
+  return matches(seq1, seq2);
 }
 
 /* show the results from calling countMatches on seq1 and seq1 */
