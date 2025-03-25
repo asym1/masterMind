@@ -17,23 +17,23 @@
 @ use the name `main` here, for standalone testing of the assembler code
 @ when integrating this code into `master-mind.c`, choose a different name
 @ otw there will be a clash with the main function in the C code
-.global         main
-main: 
+.global         loader
+loader: 
 	LDR  r2, =secret	@ pointer to secret sequence
 	LDR  r3, =guess		@ pointer to guess sequence
 	mov r4, #0 @ approx. matches
 	mov r5, #0 @ exact matches
 	mov r6, #0 @ i
-	mov r8, #0 @ j
-	@ amr mov r11 as an array of 2 values r4 and r5.  
+	mov r8, #0 @ j 
+	mov r9, #4 @ new number
+	b matches
 	
 
 
-	@ ... COMPLETE THE CODE BY ADDING YOUR CODE HERE, you should use sub-routines to structure your code
 
-exit:	@MOV	 r0, r11		@ load result to output register
-	MOV 	 r7, #1		@ load system call code
-	SWI 	 0		@ return this value
+exit:
+	MOV r7, #1		@ load system call code
+	SWI 0		@ return this value
 
 @ -----------------------------------------------------------------------------
 @ sub-routines
@@ -41,52 +41,52 @@ exit:	@MOV	 r0, r11		@ load result to output register
 @ this is the matching fct that should be callable from C	
 matches:			@ Input: R0, R1 ... ptr to int arrays to match ; Output: R0 ... exact matches (10s) and approx matches (1s) of base COLORS
 		cmp r6, #3
-		beq exit
+		beq addmatches
 		cmp r2, r3
 		beq  exact
 		b approx
 exact:
-	 	add r5, r5, #1 @exact++
-		@ add code here: set r9[r6] to 4
+	 	add r5, r5, #10 @exact + 10
 		add r6, r6, #1 @ i++
+		add r2, r6, lsl #2 @ secret[current] to secret[i]
+		mov r9, #4
+		str r9, [r3] @ given[current] = 4
+		add r3, r6, lsl #2 @ given [current] to given[i]
 		b matches
 approx:
-		@ add code set r3 back to r3[0]
+		sub r3, r6, lsl #2
 		cmp r2, r3
 		beq incApprox
-		@ add code here: got to the next value in r9
 		add r10, r10, #1 @ j++
-		add r3, #1, lsl #2 @ inc r3
+		mov r9, #1
+		add r3, r9, lsl #2 @ inc r3
 		cmp r2, r3
 		beq incApprox
-		@ add code here: got to the next value in r9
 		add r10, r10, #1 @ j++
-		add r3, #1, lsl #2 @ go to the next int
+		add r3, r9, lsl #2 @ inc r3
 		cmp r2, r3
 		beq incApprox
 		@ no matches at all go back
 		mov r10, #0 @ j = 0
-		sub r3, #3, lsl #2 @ set r3 back to r4[0]
+		mov r9, #3
+		sub r3, r9, lsl #2 @ set r3 back to r4[0]
 		add r3, r6, lsl #2 @ set r3 back to r3[i]
 		add r6, r6, #1 @ i++
 		b matches
 incApprox: 
-		str #4, [r3]
+		mov r9, #4
+		str r9, [r3]
 		sub r3, r10, lsl #2 @ set r3 back to r3[0]
-		@add code here: set r9[r10] to 4
-		@ add code here: set r9 to r9[r6]
+		add r3, r6, lsl #2
 		mov r10, #0
 		add r4, r4, #1 @ approx++
-		add r3, r4, lsl #2
+		add r6, r6, #1
 		b matches
-	@ COMPLETE THE CODE HERE
-@ show the sequence in R0, use a call to printf in libc to do the printing, a useful function when debugging 
-showseq: 			@ Input: R0 = pointer to a sequence of 3 int values to show
-	@ COMPLETE THE CODE HERE (OPTIONAL)
-	
-	
-@ =============================================================================
-
+addmatches:
+		add r5, r5, r4 @ r5 = exact + approx
+		mov r0, r5 @ r0 = r5
+		b exit
+		
 .data
 
 @ constants about the basic setup of the game: length of sequence and number of colors	
