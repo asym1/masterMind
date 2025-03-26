@@ -25,7 +25,9 @@ matches:
 	mov r9, #4 @ new number
 	b compare
 	
-
+@ check the input given in a loop
+@ Add printf code before each access to see how far the code reaches before the segmentation fault
+@ use the b... debug tool for checking  segmentation faults
 
 
 exit:
