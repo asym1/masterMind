@@ -914,13 +914,13 @@ int main (int argc, char *argv[])
     fprintf(stderr, "CALLING MATCHES from main");
     lcdClear(lcd);
     int code = countMatches(seq1, seq2);
-    printf("%d",code);
     int *currMatches = malloc(2 * sizeof(int));
     readSeq(currMatches, code);
     char exactG[1]; sprintf(exactG, "%d", currMatches[0]);
     char approxG[1]; sprintf(approxG, "%d", currMatches[1]);
-    char displayedMatches[8] = "";    
+    char displayedMatches[4] = "";    
     strcat(displayedMatches, exactG); strcat(displayedMatches, " "); strcat(displayedMatches, approxG);
+    fprintf(stderr, "%s", displayedMatches);
     lcdPosition(lcd, 0,0); lcdPuts(lcd, displayedMatches);
     lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
     blinkN(gpio, LED, currMatches[0]);
