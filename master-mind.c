@@ -280,10 +280,12 @@ void showMatches(int code) {
 /* needed for processing command-line with options -s or -u            */
 void readSeq(int *seq, int val) {
   int i = 2;
+  fprintf(stderr, "%d \n", val);
   while(val) {
     seq[i] = val % 10;
     val/=10;
     i--;
+    fprintf(stderr, "%d ", seq[i]);
   }
 }
 
@@ -920,7 +922,6 @@ int main (int argc, char *argv[])
     char approxG[1]; sprintf(approxG, "%d", currMatches[1]);
     char displayedMatches[4] = "";    
     strcat(displayedMatches, exactG); strcat(displayedMatches, " "); strcat(displayedMatches, approxG);
-    fprintf(stderr, "%s", displayedMatches);
     lcdPosition(lcd, 0,0); lcdPuts(lcd, displayedMatches);
     lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
     blinkN(gpio, LED, currMatches[0]);
