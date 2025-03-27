@@ -82,7 +82,7 @@
 // =======================================================
 // delay for loop iterations (mainly), in ms
 // in mili-seconds: 0.2s
-#define DELAY   200
+#define DELAY   600
 // in micro-seconds: 3s
 #define TIMEOUT 3000000
 // =======================================================
@@ -145,9 +145,7 @@ static const int seqlen = SEQL;
 
 static char* color_names[] = { "red", "green", "blue" };
 
-static int* theSeq = NULL;
-
-static int *seq1, *seq2, *cpy1, *cpy2;
+static int *seq1, *seq2;
 
 
 /* --------------------------------------------------------------------------- */
@@ -211,11 +209,8 @@ static int timed_out = 0;
 int failure (int fatal, const char *message, ...);
 void waitForEnter (void);
 void delay (unsigned int howLong);
-<<<<<<< HEAD
 extern int matches(int *seq1, int *seq2);
 
-=======
->>>>>>> parent of 97f17c1 (added all alternate modes & removed redundant code)
 /* ======================================================= */
 /* SECTION: hardware interface (LED, button, LCD display)  */
 /* ------------------------------------------------------- */
@@ -269,9 +264,12 @@ void waitForButton (uint32_t *gpio, int button) {
 /* initialise the secret sequence; by default it should be a random sequence */
 void initSeq() {
   seq1 = malloc(sizeof(int) * 3);
-  seq1[0] = (rand() % 3) + 1;
-  seq1[1] = (rand() % 3) + 1;
-  seq1[2] = (rand() % 3) + 1;
+  // seq1[0] = (rand() % 3) + 1;
+  // seq1[1] = (rand() % 3) + 1;
+  // seq1[2] = (rand() % 3) + 1;
+  seq1[0] = 1;
+  seq1[1] = 2;
+  seq1[2] = 3;
 }
 
 /* display the sequence on the terminal window, using the format from the sample run in the spec */
@@ -285,7 +283,6 @@ void showSeq(int *seq) {
 #define NAN2 9
 
 /* counts how many entries in seq2 match entries in seq1 */
-<<<<<<< HEAD
 /* returns exact and approximate matches both encoded in one value */
 int countMatches(int *seq1, int *seq2) {
   // int returned = 0;
@@ -304,40 +301,18 @@ int countMatches(int *seq1, int *seq2) {
   //     }
   // }
   // return returned;
+  // fprintf(stderr, "CALLING MATCHES");
   return matches(seq1, seq2);
-=======
-/* returns exact and approximate matches, either both encoded in one value, */
-/* or as a pointer to a pair of values */
-int* countMatches(int *seq1, int *seq2) {
-  int approx = 0;
-  int exact = 0;
-  for(int i =0 ; i< 3; i++) {
-      if(seq1[i] == seq2[i]) {
-        exact++;
-        seq2[i] = 4; // preventing duplicate approximate values.
-      }
-      else {
-          for(int j = 0; j < 3; j++) {
-              if(seq1[i] == seq2[j]) {
-                approx++;
-                seq2[j] = 4; // preventing duplicate approximate values.
-              }
-          }
-      }
-  }
-
-  int* pair = malloc(2*sizeof(int));
-  pair[0] = exact;
-  pair[1] = approx;
-  return pair;
-  // remember to free the pair in main.
->>>>>>> parent of 97f17c1 (added all alternate modes & removed redundant code)
 }
 
 /* show the results from calling countMatches on seq1 and seq1 */
-void showMatches(int*  code, /* only for debugging */ int *seq1, int *seq2, /* optional, to control layout */ int lcd_format) {
-  printf("exact matches: %d\n", code[0]);
-  printf("approx: %d\n", code[1]);
+void showMatches(int code) {
+  int approx, exact;
+  approx = code%10;
+  code/=10;
+  exact = code%10;
+  printf("exact matches: %d\n", exact);
+  printf("approx: %d\n", approx);
 }
 
 /* parse an integer value as a list of digits, and put them into @seq@ */
@@ -354,7 +329,7 @@ void readSeq(int *seq, int val) {
 }
 
 /* ======================================================= */
-/* SECTION: TIMER code AMR                                 */
+/* SECTION: TIMER code                                 */
 /* ------------------------------------------------------- */
 /* TIMER code */
 
@@ -396,7 +371,7 @@ void initITimer(uint64_t timeout){
 
   sigaction(SIGALRM, &sa, NULL);
 
-  // expire time 3 seconds , subject to chane
+  // expire time 3 seconds, can be changed
   timer.it_value.tv_sec = timeout;
   timer.it_value.tv_usec = 0;
 
@@ -727,9 +702,9 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 void blinkN(uint32_t *gpio, int led, int c) {
   for(int i = 0; i < c; i++){
     digitalWrite(gpio, led, 1);
-    delay(600);
+    delay(DELAY); //can be changed
     digitalWrite(gpio, led, 0);
-    delay(600);
+    delay(DELAY); //can be changed
   }
 }
 
@@ -738,32 +713,24 @@ void blinkN(uint32_t *gpio, int led, int c) {
 /* ------------------------------------------------------- */
 
 int main (int argc, char *argv[])
-{ // this is just a suggestion of some variable that you may want to use
+{
+
+  //LCD variables
   struct lcdDataStruct *lcd ;
   int bits, rows, cols ;
   unsigned char func ;
+
+  //randomizer
   srand(time(NULL));
 
-  int found = 0, attempts = 0, i, j, code;
-  int c, d, buttonPressed, rel, foo;
-  int *attSeq;
-
-  int fSel, shift, pin,  clrOff, setOff, off, res;
-  int fd ;
-
-  int  exact, contained;
-  char str1[32];
-  char str2[32];
-
-  struct timeval t1, t2 ;
-  int t ;
-
-  char buf [32] ;
+  //game logic variables
+  int found = 0, attempts = 0;
+  int fd;
 
   // variables for command-line processing
   char str_in[20], str[20] = "some text";
   int verbose = 0, debug = 0, help = 0, opt_m = 0, opt_n = 0, opt_s = 0, unit_test = 0;
-  int *res_matches = 0;
+  int res_matches = 0;
 
   // -------------------------------------------------------
   // process command-line arguments
@@ -773,24 +740,24 @@ int main (int argc, char *argv[])
     int opt;
     while ((opt = getopt(argc, argv, "hvdus:")) != -1) {
       switch (opt) {
-      case 'v':
-	verbose = 1;
-	break;
-      case 'h':
-	help = 1;
-	break;
-      case 'd':
-	debug = 1;
-	break;
-      case 'u':
-	unit_test = 1;
-	break;
-      case 's':
-	opt_s = atoi(optarg);
-	break;
-      default: /* '?' */
-	fprintf(stderr, "Usage: %s [-h] [-v] [-d] [-u <seq1> <seq2>] [-s <secret seq>]  \n", argv[0]);
-	exit(EXIT_FAILURE);
+        case 'v':
+	        verbose = 1;
+	        break;
+        case 'h':
+	        help = 1;
+	        break;
+        case 'd':
+	        debug = 1;
+	        break;
+        case 'u':
+	        unit_test = 1;
+	        break;
+        case 's':
+	        opt_s = atoi(optarg);
+	        break;
+        default: /* '?' */
+	        fprintf(stderr, "Usage: %s [-h] [-v] [-d] [-u <seq1> <seq2>] [-s <secret seq>]  \n", argv[0]);
+	        exit(EXIT_FAILURE);
       }
     }
   }
@@ -823,8 +790,6 @@ int main (int argc, char *argv[])
 
   seq1 = (int*)malloc(seqlen*sizeof(int));
   seq2 = (int*)malloc(seqlen*sizeof(int));
-  cpy1 = (int*)malloc(seqlen*sizeof(int));
-  cpy2 = (int*)malloc(seqlen*sizeof(int));
 
   // check for -u option, and if so run a unit test on the matching function
   if (unit_test && argc > optind+1) { // more arguments to process; only needed with -u
@@ -838,19 +803,15 @@ int main (int argc, char *argv[])
     if (verbose)
       fprintf(stdout, "Testing matches function with sequences %d and %d\n", opt_m, opt_n);
     res_matches = countMatches(seq1, seq2);
-    showMatches(res_matches, seq1, seq2, 1);
+    showMatches(res_matches);
     exit(EXIT_SUCCESS);
-  } else {
-    /* nothing to do here; just continue with the rest of the main fct */
   }
 
   if (opt_s) { // if -s option is given, use the sequence as secret sequence
-    if (theSeq==NULL)
-      theSeq = (int*)malloc(seqlen*sizeof(int));
-    readSeq(theSeq, opt_s);
+    readSeq(seq1, opt_s);
     if (verbose) {
       fprintf(stderr, "Running program with secret sequence:\n");
-      showSeq(theSeq);
+      showSeq(seq1);
     }
   }
 
@@ -865,11 +826,6 @@ int main (int argc, char *argv[])
 
   if (geteuid () != 0)
     fprintf (stderr, "setup: Must be root. (Did you forget sudo?)\n") ;
-
-  // init of guess sequence, and copies (for use in countMatches)
-  attSeq = (int*) malloc(seqlen*sizeof(int));
-  cpy1 = (int*)malloc(seqlen*sizeof(int));
-  cpy2 = (int*)malloc(seqlen*sizeof(int));
 
 // -----------------------------------------------------------------------------
   // constants for RPi2
@@ -927,7 +883,7 @@ int main (int argc, char *argv[])
   digitalWrite (gpio, lcd->rsPin,   0) ; pinMode (gpio, lcd->rsPin,   OUTPUT) ;
   digitalWrite (gpio, lcd->strbPin, 0) ; pinMode (gpio, lcd->strbPin, OUTPUT) ;
 
-  for (i = 0 ; i < bits ; ++i)
+  for (int i = 0 ; i < bits ; ++i)
   {
     digitalWrite (gpio, lcd->dataPins [i], 0) ;
     pinMode      (gpio, lcd->dataPins [i], OUTPUT) ;
@@ -1002,14 +958,13 @@ int main (int argc, char *argv[])
   if (!opt_s)
     initSeq();
   if (debug)
-    showSeq(theSeq);
-
-  showSeq(seq1);
+    showSeq(seq1);
   // starting the game
   fprintf(stderr, "Waiting for button\n");
   waitForButton (gpio, BUTTON);
   fprintf(stderr, "Button Pressed\n");
-  delay(100);
+  delay(250); //prevent the launching button press from counting towards the first guess
+
   // -----------------------------------------------------------------------------
   // +++++ main loop
   while (!found) {
@@ -1031,31 +986,47 @@ int main (int argc, char *argv[])
           delayMicroseconds(250000);
         }
         lastPressed = pressed;
+        if(buttonPresses == 3){
+          timed_out = 1;
+        }
       }
 
       if(buttonPresses > 0) {
         seq2[cnt] = buttonPresses;
-        fprintf(stderr, "Color guessed: %d \n", buttonPresses);
         cnt++;
         blinkN(gpio,LED2,1);
         blinkN(gpio, LED, buttonPresses);
+        fprintf(stderr, "%d", buttonPresses);
       }
       timed_out = 0;
     }
     fprintf(stderr, "Round Over! \n");
     blinkN(gpio, LED2, 2);
-    int *currMatches = countMatches(seq1, seq2);
-    char exactG[1];
-    char approxG[1];
-    sprintf(exactG, "%d", currMatches[0]);
-    sprintf(approxG, "%d", currMatches[1]);
-    char displayedMatches[8];
-    strcat(displayedMatches, exactG); strcat(displayedMatches, " "); strcat(displayedMatches, approxG); strcat(displayedMatches,"     ");
+    fprintf(stderr, "CALLING MATCHES from main");
+    lcdClear(lcd);
+    int code = countMatches(seq1, seq2);
+    printf("%d",code);
+    int *currMatches = malloc(2 * sizeof(int));
+    readSeq(currMatches, code);
+    char exactG[1]; sprintf(exactG, "%d", currMatches[0]);
+    char approxG[1]; sprintf(approxG, "%d", currMatches[1]);
+    char displayedMatches[8] = "";    
+    strcat(displayedMatches, exactG); strcat(displayedMatches, " "); strcat(displayedMatches, approxG);
     lcdPosition(lcd, 0,0); lcdPuts(lcd, displayedMatches);
     lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
     blinkN(gpio, LED, currMatches[0]);
     blinkN(gpio, LED2, 1);
     blinkN(gpio, LED, currMatches[1]);
+    
+    if(debug) {
+      fprintf(stderr, "Printing Guess & Matches for debug mode: \n");
+      for(int i = 0; i < 3; i++) {
+        fprintf(stderr, "%d " ,seq2[i]); 
+      }
+      fprintf(stderr, "\n");
+      fprintf(stderr, "Exact Matches: %d, Approx Matched: %d", currMatches[0], currMatches[1]);
+    }
+    
     if(currMatches[0] == 3) {
       found = HIGH;
     }else {

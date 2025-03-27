@@ -53,110 +53,85 @@ int failure (int fatal, const char *message, ...);
 // Functions to implement here (or directly in master-mind.c)
 
 /* this version needs gpio as argument, because it is in a separate file */
-void digitalWrite (uint32_t *gpio, int pin, int value) {
-  // int reg = 0;
-  // int copy = pin - 32;
-  // if (value == 1) {
-  //   (copy <=0) ? (reg = 7) : (reg = 8);
-  // }
-  // else {
-  //   (copy <=0) ? (reg = 10) : (reg = 11);
-  // }
-  // (*(gpio + reg)) = (1 << pin);
+void digitalWrite(uint32_t *gpio, int pin, int value) {
+  int reg = 0;
+  
   asm volatile(
-    "\tMOV r3, #0b1\n" // set r3 to 1.
-    "\tMOV r4, r1\n"
-    "\tAND r4, r4, #31\n"
-    "\tLSL r3, r3, r4\n"// shift r3 by pin number.
-    "\tMOV r5, r1\n" // copy pin into r5
-    "\tCMP r2, #1\n" // if it's 1 then set else clr.
-    "\tBNE low\n"
-    "\tCMP r5, #32\n" // if r5 is <= 32 then set0 else set1.
-    "\tBLS set0\n"
-    "\tMOV r6, #32\n" // set  to set1 (8) r6 is the bit number to be moved by for gpio
+    "\tmov r1, %[pin]\n"        // r1 = pin
+    "\tmov r2, %[val]\n"        // r2 = value
+    "\tmov r3, #1\n"            
+    "\tlsl r3, r3, r1\n"        // r3 = 1 << pin
+    "\tcmp r2, #1\n"            
+    "\tbne low\n"              
+    "\tcmp r1, #32\n"           
+    "\tbls set0\n"              
+    "\tadd %[reg], #32\n"        // Set register to set1 (8)
     "\tb shift\n"
-    "\tset0:\n"
-           "\tMOV r6, #28\n" // set  to set0 (7)
-           "\tb shift\n"
-    "\tlow:\n"  
-          "\tCMP r5, #32\n" // if r5 is <= 32 then clr0 else clr1.
-          "\tBLS clr0\n"
-          "\tMOV r6, #44\n" // set  to clr1 (11)
-          "\tb shift\n"
-    "\tclr0:\n"
-           "\tMOV r6, #40\n" // set to clr0 (10)
-           "\tb shift\n"
-    "\tshift:\n"
-            "\tstr r3, [r0, r6]\n"
+    "set0:\n"
+    "\tadd %[reg], #28\n"        // Set register to set0 (7)
+    "\tb shift\n"
+    "low:\n"
+    "\tcmp r1, #32\n"           
+    "\tbls clr0\n"              
+    "\tadd %[reg], #44\n"       // Set register to clr1 (11)
+    "\tb shift\n"
+    "clr0:\n"
+    "\tadd %[reg], #40\n"       // Set register to clr0 (10)
+    "shift:\n"
+    "\tstr r3, [%[gpio], %[reg]]\n" 
+    : [reg] "+r" (reg)
+    : [gpio] "r" (gpio), [pin] "r" (pin), [val] "r" (value)
+    : "r1", "r2", "r3", "cc"
   );
-
 }
 
 // adapted from setPinMode
 void pinMode(uint32_t *gpio, int pin, int mode) {
-  asm volatile (
-    "\tmov r3, #0\n" // r3 is fsel.
-    "\tmov r4, r1\n" // r4 is shift
-    "\tmov r5, #0\n" // counter
-    "\tmov r6, #10\n" //r6 is i in the for loop.
-    "\tmov r7, #0x7\n"
-    "\tb modulus\n"
-    "\tmodulus:\n"
-        "\tSUB r4, r4, #10\n"
-        "\tCMP r4, #10\n"
-        "\tADD r5, r5, #1\n"
-        "\tBGE modulus\n"	
-        "\tMUL r4, r5, r6\n" // r4 = int division result  x b
-        "\tSUB r4, r1, r4\n"
-        "\tb caller\n"
-    "\tcaller:\n" 
-        "\tcmp r6, #60\n"
-        "\tBGT sel\n"
-        "\tcmp r1, r6\n"
-        "\tblt loop\n"
-    "\tloop:\n" 
-        "\tmov r9, r6\n"
-        "\tSUB r9, r9, #10\n"
-        "\tcmp r1, r9\n"
-        "\tBGE sel\n"
-        "\tADD r6, r6, #10\n"
-        "\tADD r3, r3, #1\n"
-        "\tB caller\n"
-    "\tsel:\n"
-      "\tADD r0, r0, r3\n" // set r7 to gpio + fsel
-      "\tLSL r7, r7, r4\n" // 7 << shift
-      "\tBIC r0, r7\n" // gpio +fsel & ~(7 << shift)
-      "\tLSL r2, r2, r4\n" // mode << shift
-      "\tORR r0, r0,r2\n"
+  int fsel = pin / 10;  
+  int shift = (pin % 10) * 3; 
+
+  asm volatile(
+    "\tmov r2, %[gpio]\n"          // r2 = gpio
+    "\tadd r2, r2, %[sel], lsl #2\n" // r2 = gpio + fsel ( * 4 since 4 byte per int yk) 
+    "\tldr r3, [r2]\n"             // Load r2
+    "\tmov r4, #7\n"               
+    "\tlsl r4, r4, %[shifted]\n"     // r4 = (7 << shift)
+    "\tbic r3, r3, r4\n"           // gpio + fsel = gpio + fsel & ~(7 << shift)
+    "\tmov r5, %[mode]\n"          
+    "\tlsl r5, r5, %[shifted]\n"     // mode << shift
+    "\torr r3, r3, r5\n"           // gpio + fsel | mode << shift
+    "\tstr r3, [r2]\n"             // put it back in r2
+    :
+    : [gpio] "r" (gpio), [sel] "r" (fsel), [shifted] "r" (shift), [mode] "r" (mode)
+    : "r2", "r3", "r4", "r5", "memory"
   );
 }
 
 void writeLED(uint32_t *gpio, int led, int value) {
   digitalWrite(gpio, led, value);
-  /* ***  COMPLETE the code here, using inline Assembler  ***  */
+  // as per professor's esraa request.
 }
 
 int readButton(uint32_t *gpio, int button) {
-  // uint32_t GPLEV = (*(gpio + 13)); // GPLEV returns the value of the pin (week 3 tutorial slides, page 6).
+  uint32_t GPLEV = (*(gpio + 13)); 
+  int value = 0;
 
-  // int value = 0;
-  // if(((GPLEV) & (1 << (button & 31))) != 0) { // if gplev and shifting give the same value then 1 else stays as 0 (totally didn't steal it from tutorial 3). 
-  //   value = 1;
-  // }  
-  // return value;
   asm volatile(
-    "\tldr r3, [r0, #52]\n" 
-    "\tmov r5, #0\n" // r5 is the value given from button. 
-    "\tAND r1, r1, #31\n" 
-    "\tmov r6, #0b1\n" 
-    "\tlsl r6, r1\n" // r6 is the shifted value. 
-    "\tAND r3, r6\n" 
-    "\tcmp r3, #0\n"  
-    "\tbeq end\n"  
-    "\tadd r5, #1\n" 
-    "\tend:\n"  
-         "\tmov r0, r5\n" 
-         "\tbx lr\n" 
+    "\tmov r3, %[gplev]\n"     // r3 = gplev
+    "\tmov r5, #0\n"           
+    "\tand %[btn], %[btn], #31\n" // button & 31
+    "\tmov r6, #1\n"           
+    "\tlsl r6, r6, %[btn]\n"   // 1 << (button & 31)
+    "\tand r6, r3, r6\n"       // gplev & (1 << (button & 31))
+    "\tcmp r6, #0\n"           
+    "\tbeq end\n"              
+    "\tmov r5, #1\n"           
+    "end:\n"
+    "\tmov %[val], r5\n"       // value = r5
+    : [val] "=r" (value) 
+    : [gplev] "r" (GPLEV), [btn] "r" (button)
+    : "r3", "r5", "r6", "cc"
   );
-  /* ***  COMPLETE the code here, using inline Assembler  ***  */
+
+  return value;
 }

@@ -17,85 +17,75 @@
 @ use the name `main` here, for standalone testing of the assembler code
 @ when integrating this code into `master-mind.c`, choose a different name
 @ otw there will be a clash with the main function in the C code
-matches: 
-	mov r4, #0 @ approx. compare
-	mov r5, #0 @ exact compare
-	mov r6, #0 @ i
-	mov r8, #0 @ j 
-	mov r9, #4 @ new number
+
+matches:
+	push {lr}
+	ldr r0, =secret
+	ldr r1, =guess
+	mov r3, #0 @ approx. compare
+	mov r4, #0 @ exact compare
+	mov r5, #0 @ i
+	mov r6, #0 @ j 
+	mov r9, #4
 	b compare
-	
-@ check the input given in a loop
-@ Add printf code before each access to see how far the code reaches before the segmentation fault
-@ use the b... debug tool for checking  segmentation faults
 
-
-exit:
-	MOV r7, #1		@ load system call code
-	SWI 0		@ return this value
+exit: 
+	MOV r0, r4
+	pop {lr}
+	bx lr		@ return this value
 
 @ -----------------------------------------------------------------------------
 @ sub-routines
 
 @ this is the matching fct that should be callable from C	
 compare:			@ Input: R0, R1 ... ptr to int arrays to match ; Output: R0 ... exact compare (10s) and approx compare (1s) of base COLORS
-		cmp r6, #3
+		cmp r5, #3
 		beq addmatches
-		bl access
+
+
+		bl accessI
 		cmp r11, r12
 		beq  exact
+
 		b approx
 exact:
-	 	add r5, r5, #10 @exact + 10
-		add r6, r6, #1 @ i++
-		mov r9, #1 
-		add r0, r9, lsl #2 @ inc r0
-		mov r9, #4
-		str r9, [r1] @ r1[current] = 4
-		add r1, r9, lsl #2 @ inc r0
+	 	add r4, r4, #10 @exact + 10
+		str r9, [r1, r5, lsl #2] @ r1[current] = 4 no seg fault
+		add r5, r5, #1 @ i++
 		b compare
 approx:
-		sub r1, r6, lsl #2 @ r1[i] -> r1[0]
-		bl access
+		mov r6, #0
+		bl accessJ
 		cmp r11, r12
 		beq incApprox
-		add r10, r10, #1 @ j++
-		mov r9, #1
-		add r1, r9, lsl #2 @ inc r1
-		bl access
+		add r6, r6, #1 @ j++
+		bl accessJ
 		cmp r11, r12
 		beq incApprox
-		add r10, r10, #1 @ j++
-		add r1, r9, lsl #2 @ inc r1
-		bl access
+		add r6, r6, #1 @ j++
+		bl accessJ
 		cmp r11, r12
 		beq incApprox
 		@ no compare at all go back
-		mov r10, #0 @ j = 0
-		mov r9, #2
-		sub r1, r9, lsl #2 @ set r1[2] back to r1[0]
-		add r1, r6, lsl #2 @ set r1 back to r1[i]
-		add r6, r6, #1 @ i++
+		add r5, r5, #1 @ i++
 		b compare
-incApprox: 
-		mov r9, #4
-		str r9, [r1] @ r1[j] = 4
-		sub r1, r10, lsl #2 @ set r1[j] back to r1[0]
-		mov r10, #0 @ j = 0
-		add r4, r4, #1 @ approx++
-		add r6, r6, #1 @ i++
-		mov r9, #1
-		add r1, r6, lsl #2 @ r1[0] -> r1[i]
-		add r0, r9, lsl #2 @ r0[i-1] -> r0[i]
+incApprox:
+		str r9, [r1, r6, lsl #2] @ r1[j] = 4
+		add r5, r5, #1 @ i++
+		add r3, r3, #1 @ approx++
 		b compare
 addmatches:
-		add r5, r5, r4 @ r5 = exact + approx
-		mov r0, r5 @ r0 = r5
-		b exit
-access:
-		ldr r11, [r0]
-		ldr r12, [r1]
+		add r4, r4, r3 @ r4 = exact + approx
+		MOV r0, r4
+		pop {lr}
+		bx lr		@ return this value
+accessI:
+		ldr r11, [r0, r5, lsl #2] @ r11 = seq1[i]
+		ldr r12, [r1, r5, lsl #2] @ r12 = seq2[i]
 		bx lr
+accessJ:
+		ldr r12, [r1, r6, lsl #2]
+
 .data
 
 @ constants about the basic setup of the game: length of sequence and number of colors	
@@ -103,3 +93,58 @@ access:
 .equ COL, 3
 .equ NAN1, 8
 .equ NAN2, 9
+
+@ a format string for printf that can be used in showseq
+f4str: .asciz "Seq:    %d %d %d\n"
+
+@ a memory location, initialised as 0, you may need this in the matching fct
+n: .word 0x00
+	
+@ INPUT DATA for the matching function
+.align 4
+secret: .word 1 
+	.word 2 
+	.word 1 
+
+.align 4
+guess:	.word 3 
+	.word 1 
+	.word 3 
+
+@ Not strictly necessary, but can be used to test the result	
+@ Expect Answer: 0 1
+.align 4
+expect: .byte 0
+	.byte 1
+
+.align 4
+secret1: .word 1 
+	 .word 2 
+	 .word 3 
+
+.align 4
+guess1:	.word 1 
+	.word 1 
+	.word 2 
+
+@ Not strictly necessary, but can be used to test the result	
+@ Expect Answer: 1 1
+.align 4
+expect1: .byte 1
+	 .byte 1
+
+.align 4
+secret2: .word 2 
+	 .word 3
+	 .word 2 
+
+.align 4
+guess2:	.word 3 
+	.word 3 
+	.word 1 
+
+@ Not strictly necessary, but can be used to test the result	
+@ Expect Answer: 1 0
+.align 4
+expect2: .byte 1
+	 .byte 0
