@@ -16,28 +16,6 @@
  > make run
  and test
  > make test
-
- ***********************************************************************
- * The Low-level interface to LED, button, and LCD is based on:
- * wiringPi libraries by
- * Copyright (c) 2012-2013 Gordon Henderson.
- ***********************************************************************
- * See:
- *	https://projects.drogon.net/raspberry-pi/wiringpi/
- *
- *    wiringPi is free software: you can redistribute it and/or modify
- *    it under the terms of the GNU Lesser General Public License as published by
- *    the Free Software Foundation, either version 3 of the License, or
- *    (at your option) any later version.
- *
- *    wiringPi is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU Lesser General Public License for more details.
- *
- *    You should have received a copy of the GNU Lesser General Public License
- *    along with wiringPi.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************
 */
 
 /* ======================================================= */
@@ -216,15 +194,6 @@ extern int matches(int *seq1, int *seq2);
 /* ------------------------------------------------------- */
 /* low-level interface to the hardware */
 
-/* ********************************************************** */
-/* COMPLETE the code for all of the functions in this SECTION */
-/* Either put them in a separate file, lcdBinary.c, and use   */
-/* inline Assembler there, or use a standalone Assembler file */
-/* You can also directly implement them here (inline Asm).    */
-/* ********************************************************** */
-
-/* These are just prototypes; you need to complete the code for each function */
-
 /* send a @value@ (LOW or HIGH) on pin number @pin@; @gpio@ is the mmaped GPIO base address */
 void digitalWrite (uint32_t *gpio, int pin, int value);
 
@@ -241,9 +210,7 @@ int readButton(uint32_t *gpio, int button);
 /* wait for a button input on pin number @button@; @gpio@ is the mmaped GPIO base address */
 /* can use readButton(), depending on your implementation */
 void waitForButton (uint32_t *gpio, int button) {
-  /* from abdullah, why don't we add a init timer call and if we 3 seconds pass (when timer handler is called we break out of the while loop).
-  / and add a counter that increments each time a button is pressed and after 3 seconds store the count into and array of 3 ints reset the counter and do it 2 more times.
-  */
+ 
   while(1) {
     int state = readButton(gpio,button);
     if(state) return;
@@ -256,20 +223,14 @@ void waitForButton (uint32_t *gpio, int button) {
 /* ------------------------------------------------------- */
 /* AUX fcts of the game logic */
 
-/* ********************************************************** */
-/* COMPLETE the code for all of the functions in this SECTION */
-/* Implement these as C functions in this file                */
-/* ********************************************************** */
 
 /* initialise the secret sequence; by default it should be a random sequence */
 void initSeq() {
   seq1 = malloc(sizeof(int) * 3);
-  // seq1[0] = (rand() % 3) + 1;
-  // seq1[1] = (rand() % 3) + 1;
-  // seq1[2] = (rand() % 3) + 1;
-  seq1[0] = 1;
-  seq1[1] = 2;
-  seq1[2] = 3;
+  // initalize the random numbers for the secret sequence.
+  seq1[0] = (rand() % 3) + 1; 
+  seq1[1] = (rand() % 3) + 1;
+  seq1[2] = (rand() % 3) + 1;
 }
 
 /* display the sequence on the terminal window, using the format from the sample run in the spec */
@@ -317,8 +278,6 @@ void showMatches(int code) {
 
 /* parse an integer value as a list of digits, and put them into @seq@ */
 /* needed for processing command-line with options -s or -u            */
-// from amr: turns 123 -> [1,2,3] using C++ trick
-// not using this. ask later
 void readSeq(int *seq, int val) {
   int i = 2;
   while(val) {
@@ -336,10 +295,7 @@ void readSeq(int *seq, int val) {
 /* timestamps needed to implement a time-out mechanism */
 static uint64_t startT, stopT;
 
-/* ********************************************************** */
-/* COMPLETE the code for all of the functions in this SECTION */
-/* Implement these as C functions in this file                */
-/* ********************************************************** */
+
 
 /* you may need this function in timer_handler() below  */
 /* use the libc fct gettimeofday() to implement it      */
@@ -361,23 +317,22 @@ void timer_handler (int signum) {
 
 /* initialise time-stamps, setup an interval timer, and install the timer_handler callback */
 void initITimer(uint64_t timeout){
-  struct sigaction sa; // idk why it works in main bas not inittimer.
+  struct sigaction sa; 
   struct itimerval timer;
   fprintf(stderr, "adding a timer with 3 second delay\n");
-
 
   memset(&sa, 0, sizeof (sa));
   sa.sa_handler = &timer_handler; // sig. action handler set to timer handler.
 
   sigaction(SIGALRM, &sa, NULL);
 
-  // expire time 3 seconds, can be changed
+  // expire time 3 seconds
   timer.it_value.tv_sec = timeout;
   timer.it_value.tv_usec = 0;
 
   timer.it_interval.tv_sec = 0;
   timer.it_interval.tv_usec = 0;
-  // actually sets the timer.
+  // set the timer
   setitimer(ITIMER_REAL, &timer, NULL);
 
   // start time of the timer.
@@ -435,23 +390,6 @@ void delay (unsigned int howLong)
   nanosleep (&sleeper, &dummy) ;
 }
 
-/* From wiringPi code; comment by Gordon Henderson
- * delayMicroseconds:
- *	This is somewhat intersting. It seems that on the Pi, a single call
- *	to nanosleep takes some 80 to 130 microseconds anyway, so while
- *	obeying the standards (may take longer), it's not always what we
- *	want!
- *
- *	So what I'll do now is if the delay is less than 100uS we'll do it
- *	in a hard loop, watching a built-in counter on the ARM chip. This is
- *	somewhat sub-optimal in that it uses 100% CPU, something not an issue
- *	in a microcontroller, but under a multi-tasking, multi-user OS, it's
- *	wastefull, however we've no real choice )-:
- *
- *      Plan B: It seems all might not be well with that plan, so changing it
- *      to use gettimeofday () and poll on that instead...
- *********************************************************************************
- */
 
 void delayMicroseconds (unsigned int howLong)
 {
@@ -690,11 +628,6 @@ void lcdPuts (struct lcdDataStruct *lcd, const char *string)
 /* SECTION: aux functions for game logic                   */
 /* ------------------------------------------------------- */
 
-/* ********************************************************** */
-/* COMPLETE the code for all of the functions in this SECTION */
-/* Implement these as C functions in this file                */
-/* ********************************************************** */
-
 /* --------------------------------------------------------------------------- */
 /* interface on top of the low-level pin I/O code */
 
@@ -852,9 +785,7 @@ int main (int argc, char *argv[])
   pinMode(gpio,LED2,OUTPUT);
   pinMode(gpio,BUTTON,INPUT);
   // -------------------------------------------------------
-  // INLINED version of lcdInit (can only deal with one LCD attached to the RPi):
-  // you can use this code as-is, but you need to implement digitalWrite() and
-  // pinMode() which are called from this code
+ 
   // Create a new LCD:
   lcd = (struct lcdDataStruct *)malloc (sizeof (struct lcdDataStruct)) ;
   if (lcd == NULL)
@@ -873,12 +804,6 @@ int main (int argc, char *argv[])
   lcd->dataPins [1] = DATA1_PIN ;
   lcd->dataPins [2] = DATA2_PIN ;
   lcd->dataPins [3] = DATA3_PIN ;
-  // lcd->dataPins [4] = d4 ;
-  // lcd->dataPins [5] = d5 ;
-  // lcd->dataPins [6] = d6 ;
-  // lcd->dataPins [7] = d7 ;
-
-  // lcds [lcdFd] = lcd ;
 
   digitalWrite (gpio, lcd->rsPin,   0) ; pinMode (gpio, lcd->rsPin,   OUTPUT) ;
   digitalWrite (gpio, lcd->strbPin, 0) ; pinMode (gpio, lcd->strbPin, OUTPUT) ;
@@ -889,22 +814,6 @@ int main (int argc, char *argv[])
     pinMode      (gpio, lcd->dataPins [i], OUTPUT) ;
   }
   delay (35) ; // mS
-
-// Gordon Henderson's explanation of this part of the init code (from wiringPi):
-// 4-bit mode?
-//	OK. This is a PIG and it's not at all obvious from the documentation I had,
-//	so I guess some others have worked through either with better documentation
-//	or more trial and error... Anyway here goes:
-//
-//	It seems that the controller needs to see the FUNC command at least 3 times
-//	consecutively - in 8-bit mode. If you're only using 8-bit mode, then it appears
-//	that you can get away with one func-set, however I'd not rely on it...
-//
-//	So to set 4-bit mode, you need to send the commands one nibble at a time,
-//	the same three times, but send the command to set it into 8-bit mode those
-//	three times, then send a final 4th command to set it into 4-bit mode, and only
-//	then can you flip the switch for the rest of the library to work in 4-bit
-//	mode which sends the commands as 2 x 4-bit values.
 
   if (bits == 4)
   {

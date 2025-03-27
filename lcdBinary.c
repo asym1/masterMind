@@ -50,7 +50,6 @@
 int failure (int fatal, const char *message, ...);
 
 // -----------------------------------------------------------------------------
-// Functions to implement here (or directly in master-mind.c)
 
 /* this version needs gpio as argument, because it is in a separate file */
 void digitalWrite(uint32_t *gpio, int pin, int value) {
@@ -91,16 +90,16 @@ void pinMode(uint32_t *gpio, int pin, int mode) {
   int shift = (pin % 10) * 3; 
 
   asm volatile(
-    "\tmov r2, %[gpio]\n"          // r2 = gpio
-    "\tadd r2, r2, %[sel], lsl #2\n" // r2 = gpio + fsel ( * 4 since 4 byte per int yk) 
-    "\tldr r3, [r2]\n"             // Load r2
+    "\tmov r2, %[gpio]\n"          // r2 = gpio.
+    "\tadd r2, r2, %[sel], lsl #2\n" // r2 = gpio + fsel.
+    "\tldr r3, [r2]\n"             // Load r2.
     "\tmov r4, #7\n"               
-    "\tlsl r4, r4, %[shifted]\n"     // r4 = (7 << shift)
-    "\tbic r3, r3, r4\n"           // gpio + fsel = gpio + fsel & ~(7 << shift)
+    "\tlsl r4, r4, %[shifted]\n"     // r4 = (7 << shift).
+    "\tbic r3, r3, r4\n"           // gpio + fsel = gpio + fsel & ~(7 << shift).
     "\tmov r5, %[mode]\n"          
-    "\tlsl r5, r5, %[shifted]\n"     // mode << shift
-    "\torr r3, r3, r5\n"           // gpio + fsel | mode << shift
-    "\tstr r3, [r2]\n"             // put it back in r2
+    "\tlsl r5, r5, %[shifted]\n"     // mode << shift.
+    "\torr r3, r3, r5\n"           // gpio + fsel | mode << shift.
+    "\tstr r3, [r2]\n"             // store value in r2.
     :
     : [gpio] "r" (gpio), [sel] "r" (fsel), [shifted] "r" (shift), [mode] "r" (mode)
     : "r2", "r3", "r4", "r5", "memory"
@@ -117,17 +116,17 @@ int readButton(uint32_t *gpio, int button) {
   int value = 0;
 
   asm volatile(
-    "\tmov r3, %[gplev]\n"     // r3 = gplev
+    "\tmov r3, %[gplev]\n"     // r3 = gplev.
     "\tmov r5, #0\n"           
-    "\tand %[btn], %[btn], #31\n" // button & 31
+    "\tand %[btn], %[btn], #31\n" // button & 31.
     "\tmov r6, #1\n"           
-    "\tlsl r6, r6, %[btn]\n"   // 1 << (button & 31)
-    "\tand r6, r3, r6\n"       // gplev & (1 << (button & 31))
+    "\tlsl r6, r6, %[btn]\n"   // 1 << (button & 31).
+    "\tand r6, r3, r6\n"       // gplev & (1 << (button & 31)).
     "\tcmp r6, #0\n"           
     "\tbeq end\n"              
     "\tmov r5, #1\n"           
     "end:\n"
-    "\tmov %[val], r5\n"       // value = r5
+    "\tmov %[val], r5\n"       // value = r5.
     : [val] "=r" (value) 
     : [gplev] "r" (GPLEV), [btn] "r" (button)
     : "r3", "r5", "r6", "cc"

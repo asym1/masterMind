@@ -20,8 +20,6 @@
 
 matches:
 	push {lr}
-	ldr r0, =secret
-	ldr r1, =guess
 	mov r3, #0 @ approx. compare
 	mov r4, #0 @ exact compare
 	mov r5, #0 @ i
@@ -42,32 +40,30 @@ compare:			@ Input: R0, R1 ... ptr to int arrays to match ; Output: R0 ... exact
 		cmp r5, #3
 		beq addmatches
 
-
 		bl accessI
 		cmp r11, r12
 		beq  exact
-
 		b approx
 exact:
 	 	add r4, r4, #10 @exact + 10
-		str r9, [r1, r5, lsl #2] @ r1[current] = 4 no seg fault
+		str r9, [r1, r5, lsl #2] @ r1[current] = 4
 		add r5, r5, #1 @ i++
 		b compare
 approx:
-		mov r6, #0
+		mov r6, #0 		@ j = 0
 		bl accessJ
 		cmp r11, r12
 		beq incApprox
-		add r6, r6, #1 @ j++
+		add r6, r6, #1 	@ j++
 		bl accessJ
 		cmp r11, r12
 		beq incApprox
-		add r6, r6, #1 @ j++
+		add r6, r6, #1 	@ j++
 		bl accessJ
 		cmp r11, r12
 		beq incApprox
-		@ no compare at all go back
-		add r5, r5, #1 @ i++
+		@ no matches
+		add r5, r5, #1 	@ i++
 		b compare
 incApprox:
 		str r9, [r1, r6, lsl #2] @ r1[j] = 4
@@ -84,7 +80,7 @@ accessI:
 		ldr r12, [r1, r5, lsl #2] @ r12 = seq2[i]
 		bx lr
 accessJ:
-		ldr r12, [r1, r6, lsl #2]
+		ldr r12, [r1, r6, lsl #2] @ r12 = seq2[j]
 
 .data
 
