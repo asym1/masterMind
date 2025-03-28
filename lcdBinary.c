@@ -72,7 +72,7 @@ void digitalWrite(uint32_t *gpio, int pin, int value) {
     "low:\n"
     "\tcmp r1, #32\n"           
     "\tbls clr0\n"              
-    "\tadd %[reg], #44\n"       // Set register to clr1 (11)
+    "\tadd %[reg], #44\n"       // Set register to clr1 (11)1
     "\tb shift\n"
     "clr0:\n"
     "\tadd %[reg], #40\n"       // Set register to clr0 (10)

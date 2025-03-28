@@ -19,7 +19,7 @@
 @ otw there will be a clash with the main function in the C code
 
 matches:
-	push {lr}
+	push {lr}q
 	mov r3, #0 @ approx. compare
 	mov r4, #0 @ exact compare
 	mov r5, #0 @ i
@@ -72,15 +72,14 @@ incApprox:
 		b compare
 addmatches:
 		add r4, r4, r3 @ r4 = exact + approx
-		MOV r0, r4
-		pop {lr}
-		bx lr		@ return this value
+		b exit		@ go to exit
 accessI:
 		ldr r11, [r0, r5, lsl #2] @ r11 = seq1[i]
 		ldr r12, [r1, r5, lsl #2] @ r12 = seq2[i]
 		bx lr
 accessJ:
 		ldr r12, [r1, r6, lsl #2] @ r12 = seq2[j]
+		bx lr
 
 .data
 

@@ -6,9 +6,9 @@
  * Compile: 
  gcc -c -o lcdBinary.o lcdBinary.c
  gcc -c -o master-mind.o master-mind.c
- gcc -o master-mind master-mind.o lcdBinary.o
+ gcc -o cw2 master-mind.o lcdBinary.o
  * Run:     
- sudo ./master-mind
+ sudo ./cw2
 
  OR use the Makefile to build
  > make all
@@ -44,7 +44,6 @@
 /* Config settings */
 /* you can use CPP flags to e.g. print extra debugging messages */
 /* or switch between different versions of the code e.g. digitalWrite() in Assembler */
-#define DEBUG
 #undef ASM_CODE
 
 // =======================================================
@@ -124,7 +123,7 @@ static const int seqlen = SEQL;
 static char* color_names[] = { "red", "green", "blue" };
 
 static int *seq1, *seq2;
-
+int debug = 0;
 
 /* --------------------------------------------------------------------------- */
 
@@ -262,7 +261,6 @@ int countMatches(int *seq1, int *seq2) {
   //     }
   // }
   // return returned;
-  // fprintf(stderr, "CALLING MATCHES");
   return matches(seq1, seq2);
 }
 
@@ -280,12 +278,10 @@ void showMatches(int code) {
 /* needed for processing command-line with options -s or -u            */
 void readSeq(int *seq, int val) {
   int i = 2;
-  fprintf(stderr, "%d \n", val);
-  while(val) {
+  for(int i = 1; i >= 0; i--) {
     seq[i] = val % 10;
     val/=10;
-    i--;
-    fprintf(stderr, "%d ", seq[i]);
+    // fprintf(stderr, "%d ", seq[i]);
   }
 }
 
@@ -321,7 +317,7 @@ void timer_handler (int signum) {
 void initITimer(uint64_t timeout){
   struct sigaction sa; 
   struct itimerval timer;
-  fprintf(stderr, "adding a timer with 3 second delay\n");
+  fprintf(stderr, "new timer\n");
 
   memset(&sa, 0, sizeof (sa));
   sa.sa_handler = &timer_handler; // sig. action handler set to timer handler.
@@ -480,9 +476,8 @@ void sendDataCmd (const struct lcdDataStruct *lcd, unsigned char data)
 
 void lcdPutCommand (const struct lcdDataStruct *lcd, unsigned char command)
 {
-#ifdef DEBUG
-  fprintf(stderr, "lcdPutCommand: digitalWrite(%d,%d) and sendDataCmd(%d,%d)\n", lcd->rsPin,   0, lcd, command);
-#endif
+  if(debug)
+    fprintf(stderr, "lcdPutCommand: digitalWrite(%d,%d) and sendDataCmd(%d,%d)\n", lcd->rsPin,   0, lcd, command);
   digitalWrite (gpio, lcd->rsPin,   0) ;
   sendDataCmd  (lcd, command) ;
   delay (2) ;
@@ -511,9 +506,8 @@ void lcdPut4Command (const struct lcdDataStruct *lcd, unsigned char command)
 
 void lcdHome (struct lcdDataStruct *lcd)
 {
-#ifdef DEBUG
-  fprintf(stderr, "lcdHome: lcdPutCommand(%d,%d)\n", lcd, LCD_HOME);
-#endif
+  if(debug)
+    fprintf(stderr, "lcdHome: lcdPutCommand(%d,%d)\n", lcd, LCD_HOME);
   lcdPutCommand (lcd, LCD_HOME) ;
   lcd->cx = lcd->cy = 0 ;
   delay (5) ;
@@ -521,9 +515,8 @@ void lcdHome (struct lcdDataStruct *lcd)
 
 void lcdClear (struct lcdDataStruct *lcd)
 {
-#ifdef DEBUG
-  fprintf(stderr, "lcdClear: lcdPutCommand(%d,%d) and lcdPutCommand(%d,%d)\n", lcd, LCD_CLEAR, lcd, LCD_HOME);
-#endif
+  if(debug)
+    fprintf(stderr, "lcdClear: lcdPutCommand(%d,%d) and lcdPutCommand(%d,%d)\n", lcd, LCD_CLEAR, lcd, LCD_HOME);
   lcdPutCommand (lcd, LCD_CLEAR) ;
   lcdPutCommand (lcd, LCD_HOME) ;
   lcd->cx = lcd->cy = 0 ;
@@ -664,7 +657,7 @@ int main (int argc, char *argv[])
 
   // variables for command-line processing
   char str_in[20], str[20] = "some text";
-  int verbose = 0, debug = 0, help = 0, opt_m = 0, opt_n = 0, opt_s = 0, unit_test = 0;
+  int verbose = 0, help = 0, opt_m = 0, opt_n = 0, opt_s = 0, unit_test = 0;
   int res_matches = 0;
 
   // -------------------------------------------------------
@@ -898,7 +891,7 @@ int main (int argc, char *argv[])
         }
         lastPressed = pressed;
         if(buttonPresses == 3){
-          timed_out = 1;
+          break;
         }
       }
 
@@ -907,37 +900,43 @@ int main (int argc, char *argv[])
         cnt++;
         blinkN(gpio,LED2,1);
         blinkN(gpio, LED, buttonPresses);
-        fprintf(stderr, "%d", buttonPresses);
       }
       timed_out = 0;
     }
     fprintf(stderr, "Round Over! \n");
     blinkN(gpio, LED2, 2);
-    fprintf(stderr, "CALLING MATCHES from main");
     lcdClear(lcd);
+
+    // get matches.
     int code = countMatches(seq1, seq2);
     int *currMatches = malloc(2 * sizeof(int));
     readSeq(currMatches, code);
-    char exactG[1]; sprintf(exactG, "%d", currMatches[0]);
-    char approxG[1]; sprintf(approxG, "%d", currMatches[1]);
+    fprintf(stderr, "exact/approx %d\n", code);
+
+    
+    // displays the matches in lcd.
+    char exactG[1]; sprintf(exactG, "%d", currMatches[1]);
+    char approxG[1]; sprintf(approxG, "%d", currMatches[0]);
     char displayedMatches[4] = "";    
     strcat(displayedMatches, exactG); strcat(displayedMatches, " "); strcat(displayedMatches, approxG);
+    lcdClear(lcd);
+
     lcdPosition(lcd, 0,0); lcdPuts(lcd, displayedMatches);
-    lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
-    blinkN(gpio, LED, currMatches[0]);
-    blinkN(gpio, LED2, 1);
+    
+    // blink the exact and approximate matches.
     blinkN(gpio, LED, currMatches[1]);
+    blinkN(gpio, LED2, 1);
+    blinkN(gpio, LED, currMatches[0]);
     
     if(debug) {
       fprintf(stderr, "Printing Guess & Matches for debug mode: \n");
       for(int i = 0; i < 3; i++) {
         fprintf(stderr, "%d " ,seq2[i]); 
       }
-      fprintf(stderr, "\n");
-      fprintf(stderr, "Exact Matches: %d, Approx Matched: %d", currMatches[0], currMatches[1]);
+      fprintf(stderr, "\nExact Matches: %d, Approx Matched: %d", currMatches[0], currMatches[1]);
     }
     
-    if(currMatches[0] == 3) {
+    if(currMatches[1] == 3) {
       found = HIGH;
     }else {
       blinkN(gpio, LED2, 3);
@@ -947,9 +946,14 @@ int main (int argc, char *argv[])
   if (found) {
     writeLED(gpio, LED2, HIGH);
     blinkN(gpio, LED, 3);
-    lcdPosition(lcd, 0,0); lcdPuts(lcd, "SUCCESS!     ");
-    lcdPosition(lcd, 0,1); lcdPuts(lcd, "             ");
+    fprintf(stderr, "You win \n");
+    char sAttempts[2]; sprintf(sAttempts, "%d", attempts);
+    char successful[12];
+    strcpy(successful, "Attempts! ");
+    strcat(successful, sAttempts);
     lcdClear(lcd);
+    lcdPosition(lcd, 0,0); lcdPuts(lcd, "SUCCESS!     ");
+    lcdPosition(lcd, 0,1); lcdPuts(lcd, successful); // display attempts.
     free(seq1);
     free(seq2);
   } else {
