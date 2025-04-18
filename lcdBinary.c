@@ -1,14 +1,3 @@
-/* ***************************************************************************** */
-/* You can use this file to define the low-level hardware control fcts for       */
-/* LED, button and LCD devices.                                                  */ 
-/* Note that these need to be implemented in Assembler.                          */
-/* You can use inline Assembler code, or use a stand-alone Assembler file.       */
-/* Alternatively, you can implement all fcts directly in master-mind.c,          */  
-/* using inline Assembler code there.                                            */
-/* The Makefile assumes you define the functions here.                           */
-/* ***************************************************************************** */
-
-
 #ifndef	TRUE
 #  define	TRUE	(1==1)
 #  define	FALSE	(1==2)

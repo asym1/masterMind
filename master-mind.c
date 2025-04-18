@@ -1,8 +1,5 @@
 /*
  * MasterMind implementation: template; see comments below on which parts need to be completed
- * CW spec: https://www.macs.hw.ac.uk/~hwloidl/Courses/F28HS/F28HS_CW2_2022.pdf
- * This repo: https://gitlab-student.macs.hw.ac.uk/f28hs-2021-22/f28hs-2021-22-staff/f28hs-2021-22-cwk2-sys
-
  * Compile: 
  gcc -c -o lcdBinary.o lcdBinary.c
  gcc -c -o master-mind.o master-mind.c
@@ -601,7 +598,6 @@ void lcdPutchar (struct lcdDataStruct *lcd, unsigned char data)
     if (++lcd->cy == lcd->rows)
       lcd->cy = 0 ;
 
-    // TODO: inline computation of address and eliminate rowOff
     lcdPutCommand (lcd, lcd->cx + (LCD_DGRAM | (lcd->cy>0 ? 0x40 : 0x00)   /* rowOff [lcd->cy] */  )) ;
   }
 }

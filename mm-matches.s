@@ -1,7 +1,6 @@
-@ This ARM Assembler code should implement a matching function, for use in the MasterMind program, as
-@ described in the CW2 specification. It should produce as output 2 numbers, the first for the
-@ exact compare (peg of right colour and in right position) and approximate compare (peg of right
-@ color but not in right position). Make sure to count each peg just once!
+@ This ARM Assembler code should implement a matching function, it should produce as output 2 numbers,
+@ the first for the exact compare (peg of right colour and in right position) and approximate compare
+@ (peg of right color but not in right position). Make sure to count each peg just once!
 	
 @ Example (first sequence is secret, second sequence is guess):
 @ 1 2 1
